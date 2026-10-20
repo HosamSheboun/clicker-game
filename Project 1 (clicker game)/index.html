@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .game-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+            width: 320px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .score-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2e7d32;
+            margin: 15px 0;
+        }
+
+        .click-btn {
+            background-color: #4caf50;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            height: 120px;
+            width: 120px;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            user-select: none;
+        }
+
+        .click-btn:active {
+            transform: scale(0.92);
+        }
+
+        .upgrades {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .upgrade-btn {
+            background-color: #2196f3;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .upgrade-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-card">
+        <h1>Clicker Game</h1>
+        <p>Click the button to generate energy!</p>
+        
+        <div class="score-display" id="score">0</div>
+
+        <button class="click-btn" id="clicker">CLICK!</button>
+
+        <div class="upgrades">
+            <button class="upgrade-btn" id="buy-auto" disabled>
+                Buy Auto-Clicker (+1/sec) - Cost: 10
+            </button>
+            <button class="upgrade-btn" id="buy-multiplier" disabled>
+                Upgrade Click Power (+1/click) - Cost: 20
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let clickPower = 1;
+        let autoClickers = 0;
+
+        let autoCost = 10;
+        let multCost = 20;
+
+        const scoreEl = document.getElementById('score');
+        const clickerBtn = document.getElementById('clicker');
+        const buyAutoBtn = document.getElementById('buy-auto');
+        const buyMultBtn = document.getElementById('buy-multiplier');
+
+        function updateUI() {
+            scoreEl.textContent = Math.floor(score);
+            
+            buyAutoBtn.textContent = `Buy Auto-Clicker (+1/sec) [Owned: ${autoClickers}] - Cost: ${autoCost}`;
+            buyAutoBtn.disabled = score < autoCost;
+
+            buyMultBtn.textContent = `Click Power (+1/click) [Power: ${clickPower}] - Cost: ${multCost}`;
+            buyMultBtn.disabled = score < multCost;
+        }
+
+        clickerBtn.addEventListener('click', () => {
+            score += clickPower;
+            updateUI();
+        });
+
+        buyAutoBtn.addEventListener('click', () => {
+            if (score >= autoCost) {
+                score -= autoCost;
+                autoClickers++;
+                autoCost = Math.floor(autoCost * 1.5);
+                updateUI();
+            }
+        });
+
+        buyMultBtn.addEventListener('click', () => {
+            if (score >= multCost) {
+                score -= multCost;
+                clickPower++;
+                multCost = Math.floor(multCost * 1.8);
+                updateUI();
+            }
+        });
+
+        // Passive score generation loop
+        setInterval(() => {
+            if (autoClickers > 0) {
+                score += autoClickers;
+                updateUI();
+            }
+        }, 1000);
+
+        updateUI();
+    </script>
+</body>
+</html>
