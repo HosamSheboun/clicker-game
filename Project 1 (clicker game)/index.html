@@ -3,157 +3,466 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicker Game</title>
+    <meta name="theme-color" content="#0b1020">
+    <title>Energy Clicker</title>
     <style>
+        :root {
+            color-scheme: dark;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0b1020;
+            color: #f4f7ff;
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            --muted: #9ba8c7;
+            --panel: rgba(20, 29, 53, 0.88);
+            --line: rgba(157, 177, 226, 0.15);
+            --accent: #73fbd3;
+            --violet: #a98bff;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            min-width: 320px;
+            min-height: 100vh;
             margin: 0;
+            padding: 32px 20px;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(ellipse at 16% 15%, rgba(69, 94, 184, 0.24), transparent 36%),
+                radial-gradient(ellipse at 88% 80%, rgba(50, 204, 170, 0.13), transparent 35%),
+                #0b1020;
         }
 
-        .game-card {
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            padding: 30px;
-            text-align: center;
-            width: 320px;
+        button { font: inherit; }
+
+        .game {
+            width: min(100%, 920px);
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            background: rgba(12, 18, 35, 0.8);
+            box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+            backdrop-filter: blur(18px);
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .score-display {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #2e7d32;
-            margin: 15px 0;
-        }
-
-        .click-btn {
-            background-color: #4caf50;
-            border: none;
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            font-size: 1.5rem;
-            font-weight: bold;
-            height: 120px;
-            width: 120px;
-            transition: transform 0.1s ease, background-color 0.2s ease;
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
-            user-select: none;
-        }
-
-        .click-btn:active {
-            transform: scale(0.92);
-        }
-
-        .upgrades {
-            margin-top: 25px;
+        .topbar {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px 30px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+
+        .brand-mark {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border: 1px solid rgba(115, 251, 211, 0.36);
+            border-radius: 14px;
+            color: var(--accent);
+            background: rgba(115, 251, 211, 0.1);
+            font-size: 1.35rem;
+        }
+
+        .brand-name { margin: 0; font-size: 1rem; font-weight: 750; letter-spacing: 0.02em; }
+        .brand-caption { margin: 3px 0 0; color: var(--muted); font-size: 0.78rem; }
+
+        .save-status {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-align: right;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(300px, 0.88fr);
+            gap: 28px;
+            padding: 30px;
+        }
+
+        .core {
+            display: flex;
+            min-height: 440px;
             flex-direction: column;
-            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background:
+                radial-gradient(circle at 50% 45%, rgba(79, 249, 205, 0.09), transparent 42%),
+                rgba(19, 28, 51, 0.68);
+            text-align: center;
         }
 
-        .upgrade-btn {
-            background-color: #2196f3;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            padding: 10px;
-            font-size: 0.9rem;
+        .eyebrow {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.75rem;
+            font-weight: 750;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .score {
+            margin: 10px 0 0;
+            color: #f8fffd;
+            font-size: clamp(3rem, 9vw, 5rem);
+            font-variant-numeric: tabular-nums;
+            font-weight: 800;
+            letter-spacing: -0.07em;
+            line-height: 1.05;
+            text-shadow: 0 0 38px rgba(115, 251, 211, 0.18);
+        }
+
+        .energy-label { margin: 8px 0 24px; color: var(--accent); font-weight: 650; }
+
+        .click-button {
+            position: relative;
+            display: grid;
+            width: 174px;
+            height: 174px;
+            place-items: center;
+            border: 1px solid rgba(166, 255, 232, 0.85);
+            border-radius: 50%;
+            color: #071a19;
+            background: linear-gradient(145deg, #a5ffe7, #4ee4bd 58%, #34caa9);
+            box-shadow: 0 0 0 10px rgba(79, 230, 192, 0.08), 0 15px 45px rgba(54, 225, 184, 0.28);
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            font-size: 1.08rem;
+            font-weight: 850;
+            letter-spacing: 0.08em;
+            transition: transform 120ms ease, filter 160ms ease, box-shadow 160ms ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .upgrade-btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        .click-button:hover { filter: brightness(1.08); box-shadow: 0 0 0 13px rgba(79, 230, 192, 0.1), 0 18px 50px rgba(54, 225, 184, 0.36); }
+        .click-button:active { transform: scale(0.94); }
+        .click-button:focus-visible, .upgrade-button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+        .click-button span { display: block; }
+        .click-button small { display: block; margin-top: 5px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; opacity: 0.72; }
+
+        .stats {
+            display: grid;
+            width: 100%;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 34px;
+        }
+
+        .stat {
+            padding: 13px;
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            background: rgba(8, 13, 27, 0.35);
+        }
+
+        .stat-label { display: block; color: var(--muted); font-size: 0.72rem; }
+        .stat-value { display: block; margin-top: 4px; font-size: 1rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+
+        .shop { padding: 5px 0; }
+        .shop-heading { margin: 0; font-size: 1.3rem; letter-spacing: -0.03em; }
+        .shop-intro { margin: 7px 0 20px; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+        .upgrade-list { display: grid; gap: 12px; }
+
+        .upgrade-button {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 46px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 13px;
+            padding: 15px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            color: inherit;
+            background: var(--panel);
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 160ms ease, transform 160ms ease, background 160ms ease, opacity 160ms ease;
+        }
+
+        .upgrade-button:not(:disabled):hover {
+            transform: translateY(-2px);
+            border-color: rgba(115, 251, 211, 0.55);
+            background: rgba(28, 42, 68, 0.96);
+        }
+
+        .upgrade-button:disabled { opacity: 0.56; cursor: not-allowed; }
+
+        .upgrade-icon {
+            display: grid;
+            width: 46px;
+            height: 46px;
+            place-items: center;
+            border-radius: 13px;
+            color: var(--accent);
+            background: rgba(115, 251, 211, 0.1);
+            font-size: 1.35rem;
+        }
+
+        .upgrade-button:nth-child(2) .upgrade-icon { color: var(--violet); background: rgba(169, 139, 255, 0.12); }
+        .upgrade-button:nth-child(3) .upgrade-icon { color: #ffd178; background: rgba(255, 209, 120, 0.12); }
+        .upgrade-name { display: block; font-size: 0.9rem; font-weight: 750; }
+        .upgrade-description { display: block; margin-top: 4px; color: var(--muted); font-size: 0.75rem; line-height: 1.35; }
+
+        .upgrade-price {
+            min-width: 68px;
+            padding: 8px 9px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            color: #d9e5ff;
+            background: rgba(5, 10, 23, 0.45);
+            font-size: 0.76rem;
+            font-weight: 750;
+            text-align: center;
+        }
+
+        .tip {
+            margin: 18px 0 0;
+            padding: 13px 14px;
+            border-left: 2px solid var(--violet);
+            border-radius: 0 10px 10px 0;
+            color: var(--muted);
+            background: rgba(169, 139, 255, 0.07);
+            font-size: 0.77rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 720px) {
+            body { padding: 16px 12px; }
+            .topbar { padding: 18px 20px; }
+            .content { grid-template-columns: 1fr; gap: 22px; padding: 20px; }
+            .core { min-height: 410px; padding: 22px; }
+            .shop { padding: 0; }
+        }
+
+        @media (max-width: 420px) {
+            .brand-caption { display: none; }
+            .save-status { max-width: 130px; font-size: 0.7rem; }
+            .content { padding: 14px; }
+            .upgrade-button { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding: 12px; }
+            .upgrade-icon { width: 40px; height: 40px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body>
+    <main class="game">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">⚡</div>
+                <div>
+                    <p class="brand-name">ENERGY LAB</p>
+                    <p class="brand-caption">Build your power source</p>
+                </div>
+            </div>
+            <div class="save-status" id="save-status" role="status" aria-live="polite">Progress saves automatically</div>
+        </header>
 
-    <div class="game-card">
-        <h1>Clicker Game</h1>
-        <p>Click the button to generate energy!</p>
-        
-        <div class="score-display" id="score">0</div>
+        <div class="content">
+            <section class="core" aria-label="Energy generator">
+                <p class="eyebrow">Total energy</p>
+                <p class="score" id="score" aria-live="polite">0</p>
+                <p class="energy-label">⚡ energy</p>
+                <button class="click-button" id="clicker" type="button" aria-label="Generate energy">
+                    <span>GENERATE<small id="click-value">+1 energy</small></span>
+                </button>
+                <div class="stats" aria-label="Production stats">
+                    <div class="stat">
+                        <span class="stat-label">Per click</span>
+                        <span class="stat-value" id="click-stat">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Per second</span>
+                        <span class="stat-value" id="rate-stat">0</span>
+                    </div>
+                </div>
+            </section>
 
-        <button class="click-btn" id="clicker">CLICK!</button>
-
-        <div class="upgrades">
-            <button class="upgrade-btn" id="buy-auto" disabled>
-                Buy Auto-Clicker (+1/sec) - Cost: 10
-            </button>
-            <button class="upgrade-btn" id="buy-multiplier" disabled>
-                Upgrade Click Power (+1/click) - Cost: 20
-            </button>
+            <section class="shop" aria-labelledby="shop-title">
+                <h1 class="shop-heading" id="shop-title">Upgrade your lab</h1>
+                <p class="shop-intro">Invest energy in better equipment and let your production grow.</p>
+                <div class="upgrade-list">
+                    <button class="upgrade-button" id="buy-auto" type="button">
+                        <span class="upgrade-icon" aria-hidden="true">⏱</span>
+                        <span>
+                            <span class="upgrade-name">Auto-clicker</span>
+                            <span class="upgrade-description" id="auto-description">+1 energy/sec · Owned: 0</span>
+                        </span>
+                        <span class="upgrade-price" id="auto-price">10 ⚡</span>
+                    </button>
+                    <button class="upgrade-button" id="buy-multiplier" type="button">
+                        <span class="upgrade-icon" aria-hidden="true">✦</span>
+                        <span>
+                            <span class="upgrade-name">Power cell</span>
+                            <span class="upgrade-description" id="power-description">+1 energy/click · Level: 0</span>
+                        </span>
+                        <span class="upgrade-price" id="power-price">20 ⚡</span>
+                    </button>
+                    <button class="upgrade-button" id="buy-reactor" type="button">
+                        <span class="upgrade-icon" aria-hidden="true">◈</span>
+                        <span>
+                            <span class="upgrade-name">Mini reactor</span>
+                            <span class="upgrade-description" id="reactor-description">+5 energy/sec · Owned: 0</span>
+                        </span>
+                        <span class="upgrade-price" id="reactor-price">75 ⚡</span>
+                    </button>
+                </div>
+                <p class="tip">Tip: Your lab keeps producing energy while you’re away. Check back later to collect it.</p>
+            </section>
         </div>
-    </div>
+    </main>
 
     <script>
-        let score = 0;
-        let clickPower = 1;
-        let autoClickers = 0;
+        const SAVE_KEY = 'energy-clicker-save-v1';
+        const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
+        const numberFormat = new Intl.NumberFormat('en-US', {
+            notation: 'compact',
+            maximumFractionDigits: 1
+        });
 
-        let autoCost = 10;
-        let multCost = 20;
+        const upgrades = {
+            auto: { baseCost: 10, growth: 1.5, owned: 0, rate: 1 },
+            power: { baseCost: 20, growth: 1.8, owned: 0, rate: 1 },
+            reactor: { baseCost: 75, growth: 1.65, owned: 0, rate: 5 }
+        };
+        let score = 0;
 
         const scoreEl = document.getElementById('score');
         const clickerBtn = document.getElementById('clicker');
-        const buyAutoBtn = document.getElementById('buy-auto');
-        const buyMultBtn = document.getElementById('buy-multiplier');
+        const saveStatus = document.getElementById('save-status');
+        const clickStat = document.getElementById('click-stat');
+        const rateStat = document.getElementById('rate-stat');
+        const upgradeElements = {
+            auto: {
+                button: document.getElementById('buy-auto'),
+                description: document.getElementById('auto-description'),
+                price: document.getElementById('auto-price')
+            },
+            power: {
+                button: document.getElementById('buy-multiplier'),
+                description: document.getElementById('power-description'),
+                price: document.getElementById('power-price')
+            },
+            reactor: {
+                button: document.getElementById('buy-reactor'),
+                description: document.getElementById('reactor-description'),
+                price: document.getElementById('reactor-price')
+            }
+        };
 
-        function updateUI() {
-            scoreEl.textContent = Math.floor(score);
-            
-            buyAutoBtn.textContent = `Buy Auto-Clicker (+1/sec) [Owned: ${autoClickers}] - Cost: ${autoCost}`;
-            buyAutoBtn.disabled = score < autoCost;
+        function getCost(upgrade) {
+            return Math.floor(upgrade.baseCost * upgrade.growth ** upgrade.owned);
+        }
 
-            buyMultBtn.textContent = `Click Power (+1/click) [Power: ${clickPower}] - Cost: ${multCost}`;
-            buyMultBtn.disabled = score < multCost;
+        function getClickPower() {
+            return 1 + upgrades.power.owned * upgrades.power.rate;
+        }
+
+        function getProductionRate() {
+            return upgrades.auto.owned * upgrades.auto.rate + upgrades.reactor.owned * upgrades.reactor.rate;
+        }
+
+        function render() {
+            scoreEl.textContent = numberFormat.format(Math.floor(score));
+            clickStat.textContent = numberFormat.format(getClickPower());
+            rateStat.textContent = `${numberFormat.format(getProductionRate())} / sec`;
+            document.getElementById('click-value').textContent = `+${numberFormat.format(getClickPower())} energy`;
+
+            Object.entries(upgradeElements).forEach(([key, elements]) => {
+                const upgrade = upgrades[key];
+                const cost = getCost(upgrade);
+                const unit = key === 'power' ? 'energy/click' : 'energy/sec';
+                const ownershipLabel = key === 'power' ? 'Level' : 'Owned';
+                elements.description.textContent = `+${upgrade.rate} ${unit} · ${ownershipLabel}: ${upgrade.owned}`;
+                elements.price.textContent = `${numberFormat.format(cost)} ⚡`;
+                elements.button.disabled = score < cost;
+                elements.button.setAttribute('aria-label', `Buy ${key === 'power' ? 'power cell' : key === 'auto' ? 'auto-clicker' : 'mini reactor'} for ${cost} energy`);
+            });
+        }
+
+        function saveGame() {
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify({
+                    score,
+                    auto: upgrades.auto.owned,
+                    power: upgrades.power.owned,
+                    reactor: upgrades.reactor.owned,
+                    savedAt: Date.now()
+                }));
+                saveStatus.textContent = 'Progress saves automatically';
+            } catch (error) {
+                saveStatus.textContent = 'Saving unavailable in this browser';
+            }
+        }
+
+        function loadGame() {
+            let saved;
+            try {
+                const value = localStorage.getItem(SAVE_KEY);
+                if (!value) return;
+                saved = JSON.parse(value);
+            } catch (error) {
+                saveStatus.textContent = 'Could not load saved progress';
+                return;
+            }
+
+            if (!saved || typeof saved !== 'object') return;
+            const validNonNegativeNumber = value => Number.isFinite(value) && value >= 0;
+            if (validNonNegativeNumber(saved.score)) score = saved.score;
+            for (const key of Object.keys(upgrades)) {
+                if (Number.isSafeInteger(saved[key]) && saved[key] >= 0) {
+                    upgrades[key].owned = saved[key];
+                }
+            }
+
+            if (validNonNegativeNumber(saved.savedAt)) {
+                const elapsedSeconds = Math.min(MAX_OFFLINE_SECONDS, Math.max(0, (Date.now() - saved.savedAt) / 1000));
+                score += getProductionRate() * elapsedSeconds;
+            }
+        }
+
+        function buyUpgrade(key) {
+            const upgrade = upgrades[key];
+            const cost = getCost(upgrade);
+            if (score < cost) return;
+            score -= cost;
+            upgrade.owned++;
+            render();
+            saveGame();
         }
 
         clickerBtn.addEventListener('click', () => {
-            score += clickPower;
-            updateUI();
+            score += getClickPower();
+            render();
+            saveGame();
         });
 
-        buyAutoBtn.addEventListener('click', () => {
-            if (score >= autoCost) {
-                score -= autoCost;
-                autoClickers++;
-                autoCost = Math.floor(autoCost * 1.5);
-                updateUI();
-            }
+        Object.entries(upgradeElements).forEach(([key, elements]) => {
+            elements.button.addEventListener('click', () => buyUpgrade(key));
         });
 
-        buyMultBtn.addEventListener('click', () => {
-            if (score >= multCost) {
-                score -= multCost;
-                clickPower++;
-                multCost = Math.floor(multCost * 1.8);
-                updateUI();
-            }
-        });
-
-        // Passive score generation loop
-        setInterval(() => {
-            if (autoClickers > 0) {
-                score += autoClickers;
-                updateUI();
+        loadGame();
+        render();
+        saveGame();
+        window.setInterval(() => {
+            const rate = getProductionRate();
+            if (rate > 0) {
+                score += rate;
+                render();
+                saveGame();
             }
         }, 1000);
-
-        updateUI();
     </script>
 </body>
 </html>
