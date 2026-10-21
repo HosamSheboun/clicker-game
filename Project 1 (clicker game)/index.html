@@ -145,6 +145,7 @@
 
         .click-button:hover { filter: brightness(1.08); box-shadow: 0 0 0 13px rgba(79, 230, 192, 0.1), 0 18px 50px rgba(54, 225, 184, 0.36); }
         .click-button:active { transform: scale(0.94); }
+        .click-button:disabled { filter: grayscale(0.7); cursor: not-allowed; }
         .click-button:focus-visible, .upgrade-button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
         .click-button span { display: block; }
         .click-button small { display: block; margin-top: 5px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; opacity: 0.72; }
@@ -209,6 +210,8 @@
 
         .upgrade-button:nth-child(2) .upgrade-icon { color: var(--violet); background: rgba(169, 139, 255, 0.12); }
         .upgrade-button:nth-child(3) .upgrade-icon { color: #ffd178; background: rgba(255, 209, 120, 0.12); }
+        #buy-surge .upgrade-icon { color: #ff90bd; background: rgba(255, 144, 189, 0.12); }
+        #buy-discount .upgrade-icon { color: #8eb7ff; background: rgba(142, 183, 255, 0.12); }
         .upgrade-name { display: block; font-size: 0.9rem; font-weight: 750; }
         .upgrade-description { display: block; margin-top: 4px; color: var(--muted); font-size: 0.75rem; line-height: 1.35; }
 
@@ -235,12 +238,101 @@
             line-height: 1.5;
         }
 
+        .topbar-actions { display: flex; align-items: center; gap: 14px; }
+        .settings { display: flex; gap: 8px; }
+        .extras { margin: 0 30px 30px; }
+
+        .setting-toggle, .small-button {
+            padding: 8px 11px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            color: #d9e5ff;
+            background: rgba(20, 29, 53, 0.75);
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .setting-toggle[aria-pressed="true"] { border-color: rgba(115, 251, 211, 0.5); color: var(--accent); }
+        .setting-toggle:focus-visible, .small-button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+        .extras {
+            display: grid;
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .extra-card {
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(20, 29, 53, 0.72);
+        }
+
+        .extra-card h2 { margin: 0; font-size: 1rem; letter-spacing: -0.02em; }
+        .extra-card p { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+        .mission-progress { margin: 12px 0 5px; color: var(--accent) !important; font-weight: 750; }
+        .progress-track { height: 8px; overflow: hidden; border-radius: 99px; background: rgba(4, 9, 20, 0.7); }
+        .progress-bar { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4ee4bd, #a5ffe7); transition: width 180ms ease; }
+        .prestige-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+        .prestige-bonus { color: #ffd178; font-size: 0.8rem; font-weight: 750; }
+        .prestige-button { padding: 10px 13px; border: 0; border-radius: 10px; color: #211602; background: #ffd178; font-weight: 800; cursor: pointer; }
+        .prestige-button:disabled { opacity: 0.45; cursor: not-allowed; }
+        .achievement-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+        .achievement {
+            min-height: 82px;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(7, 12, 25, 0.35);
+        }
+        .achievement.unlocked { border-color: rgba(255, 209, 120, 0.35); background: rgba(255, 209, 120, 0.07); }
+        .achievement-name { display: block; font-size: 0.75rem; font-weight: 750; }
+        .achievement-detail { display: block; margin-top: 5px; color: var(--muted); font-size: 0.68rem; line-height: 1.35; }
+        .break-reminder {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 0 30px 24px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 209, 120, 0.35);
+            border-radius: 14px;
+            background: rgba(255, 209, 120, 0.08);
+        }
+        .break-reminder[hidden] { display: none; }
+        .break-reminder p { margin: 0; color: #ffe4ad; font-size: 0.83rem; line-height: 1.4; }
+        .break-actions { display: flex; flex-shrink: 0; gap: 8px; }
+        .break-setting { display: flex; align-items: center; gap: 9px; color: #d9e5ff; font-size: 0.82rem; }
+        .paused-status { margin: 0 0 18px; color: #ffd178; font-size: 0.85rem; font-weight: 700; }
+        #game-toast {
+            position: fixed;
+            z-index: 2;
+            right: max(20px, calc((100vw - 920px) / 2));
+            bottom: 20px;
+            max-width: min(380px, calc(100vw - 40px));
+            padding: 13px 16px;
+            border: 1px solid rgba(115, 251, 211, 0.4);
+            border-radius: 12px;
+            color: #eafff8;
+            background: #172b37;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+            font-size: 0.85rem;
+        }
+        #game-toast[hidden] { display: none; }
+        .motion-off *, .motion-off *::before, .motion-off *::after { animation: none !important; transition: none !important; }
+
         @media (max-width: 720px) {
             body { padding: 16px 12px; }
             .topbar { padding: 18px 20px; }
             .content { grid-template-columns: 1fr; gap: 22px; padding: 20px; }
             .core { min-height: 410px; padding: 22px; }
             .shop { padding: 0; }
+            .extras { grid-template-columns: 1fr; }
+            .achievement-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .extras { margin: 0 20px 20px; }
+            .break-reminder { margin: 0 20px 20px; }
         }
 
         @media (max-width: 420px) {
@@ -249,6 +341,13 @@
             .content { padding: 14px; }
             .upgrade-button { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding: 12px; }
             .upgrade-icon { width: 40px; height: 40px; }
+            .topbar { align-items: flex-start; }
+            .topbar-actions { align-items: flex-end; flex-direction: column; gap: 8px; }
+            .settings { gap: 5px; }
+            .setting-toggle { padding: 7px; font-size: 0.68rem; }
+            .extras { margin: 0 14px 14px; }
+            .prestige-row, .break-reminder { align-items: flex-start; flex-direction: column; }
+            .break-actions { width: 100%; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -266,7 +365,14 @@
                     <p class="brand-caption">Build your power source</p>
                 </div>
             </div>
-            <div class="save-status" id="save-status" role="status" aria-live="polite">Progress saves automatically</div>
+            <div class="topbar-actions">
+                <div class="settings" aria-label="Quick settings">
+                    <button class="setting-toggle" id="pause-toggle" type="button" aria-pressed="false">Pause</button>
+                    <button class="setting-toggle" id="sound-toggle" type="button" aria-pressed="false">Sound: Off</button>
+                    <button class="setting-toggle" id="motion-toggle" type="button" aria-pressed="true">Motion: On</button>
+                </div>
+                <div class="save-status" id="save-status" role="status" aria-live="polite">Progress saves automatically</div>
+            </div>
         </header>
 
         <div class="content">
@@ -277,6 +383,7 @@
                 <button class="click-button" id="clicker" type="button" aria-label="Generate energy">
                     <span>GENERATE<small id="click-value">+1 energy</small></span>
                 </button>
+                <p class="paused-status" id="paused-status" hidden>Game paused. Take your time.</p>
                 <div class="stats" aria-label="Production stats">
                     <div class="stat">
                         <span class="stat-label">Per click</span>
@@ -321,56 +428,261 @@
                 <p class="tip">Tip: Your lab keeps producing energy while you’re away. Check back later to collect it.</p>
             </section>
         </div>
+
+        <section class="extras" aria-label="Goals and progression">
+            <article class="extra-card" aria-labelledby="mission-title">
+                <h2 id="mission-title">Lab mission</h2>
+                <p id="mission-description">Earn energy to complete your next mission.</p>
+                <p class="mission-progress" id="mission-progress">0 / 100 energy</p>
+                <div class="progress-track" id="mission-track" role="progressbar" aria-label="Mission progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-bar" id="mission-bar"></div>
+                </div>
+                <p id="mission-reward">Reward: 25 energy</p>
+            </article>
+
+            <article class="extra-card" aria-labelledby="prestige-title">
+                <h2 id="prestige-title">Prestige</h2>
+                <p>Reset your energy and equipment to earn a permanent production bonus. Your achievements and lifetime stats stay.</p>
+                <div class="prestige-row">
+                    <span class="prestige-bonus" id="prestige-bonus">Cores: 0 · Bonus: +0%</span>
+                    <button class="prestige-button" id="prestige-button" type="button" disabled>Requires 100K earned</button>
+                </div>
+            </article>
+
+            <article class="extra-card" aria-labelledby="settings-title">
+                <h2 id="settings-title">Play settings</h2>
+                <p>Sound and motion are optional. Break reminders are off unless you turn them on.</p>
+                <label class="break-setting">
+                    <input id="break-toggle" type="checkbox">
+                    Remind me to take a break every 30 minutes
+                </label>
+            </article>
+
+            <article class="extra-card" aria-labelledby="achievements-title">
+                <h2 id="achievements-title">Achievements</h2>
+                <p id="achievement-count">0 of 8 unlocked</p>
+                <div class="achievement-grid" id="achievement-grid" aria-live="polite"></div>
+            </article>
+        </section>
+
+        <aside class="break-reminder" id="break-reminder" role="status" aria-live="polite" hidden>
+            <p>You've been playing for a while. Stretch, hydrate, or take a short break—you can come back whenever you like.</p>
+            <div class="break-actions">
+                <button class="small-button" id="break-snooze" type="button">Remind me in 10 min</button>
+                <button class="small-button" id="break-dismiss" type="button">Got it</button>
+            </div>
+        </aside>
+        <div id="game-toast" role="status" aria-live="polite" hidden></div>
     </main>
 
     <script>
         const SAVE_KEY = 'energy-clicker-save-v1';
         const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
+        const BREAK_INTERVAL_SECONDS = 30 * 60;
         const numberFormat = new Intl.NumberFormat('en-US', {
             notation: 'compact',
             maximumFractionDigits: 1
         });
 
         const upgrades = {
-            auto: { baseCost: 10, growth: 1.5, owned: 0, rate: 1 },
-            power: { baseCost: 20, growth: 1.8, owned: 0, rate: 1 },
-            reactor: { baseCost: 75, growth: 1.65, owned: 0, rate: 5 }
+            auto: { name: 'auto-clicker', baseCost: 10, growth: 1.5, owned: 0, rate: 1, unit: 'energy/sec', label: 'Owned' },
+            power: { name: 'power cell', baseCost: 20, growth: 1.8, owned: 0, rate: 1, unit: 'energy/click', label: 'Level' },
+            reactor: { name: 'mini reactor', baseCost: 75, growth: 1.65, owned: 0, rate: 5, unit: 'energy/sec', label: 'Owned' },
+            surge: { name: 'surge coil', baseCost: 150, growth: 1.75, owned: 0, rate: 25, unit: '% click power', label: 'Level' },
+            discount: { name: 'efficient circuits', baseCost: 250, growth: 1.9, owned: 0, rate: 5, unit: '% lower costs', label: 'Level' }
         };
+        const upgradeIcons = { auto: '⏱', power: '✦', reactor: '◈', surge: '⌁', discount: '⬡' };
+        const missions = [
+            { type: 'energy', target: 100, reward: 25, label: 'Generate energy' },
+            { type: 'clicks', target: 50, reward: 75, label: 'Make clicks' },
+            { type: 'upgrades', target: 3, reward: 100, label: 'Buy upgrades' },
+            { type: 'energy', target: 1000, reward: 300, label: 'Generate energy' },
+            { type: 'energy', target: 10000, reward: 2000, label: 'Generate energy' },
+            { type: 'clicks', target: 250, reward: 500, label: 'Make clicks' }
+        ];
+        const achievements = [
+            { id: 'first-click', name: 'First spark', detail: 'Generate your first energy.', test: stats => stats.clicks >= 1 },
+            { id: 'hundred-clicks', name: 'Getting warmed up', detail: 'Make 100 clicks.', test: stats => stats.clicks >= 100 },
+            { id: 'thousand-clicks', name: 'Power user', detail: 'Make 1,000 clicks.', test: stats => stats.clicks >= 1000 },
+            { id: 'energy-1000', name: 'Small current', detail: 'Generate 1,000 energy.', test: stats => stats.earned >= 1000 },
+            { id: 'energy-100000', name: 'Power plant', detail: 'Generate 100,000 energy.', test: stats => stats.earned >= 100000 },
+            { id: 'upgrade-5', name: 'Lab tinkerer', detail: 'Buy 5 upgrades.', test: stats => stats.upgrades >= 5 },
+            { id: 'upgrade-25', name: 'Chief engineer', detail: 'Buy 25 upgrades.', test: stats => stats.upgrades >= 25 },
+            { id: 'first-prestige', name: 'New beginnings', detail: 'Earn your first energy core.', test: stats => stats.prestiges >= 1 }
+        ];
         let score = 0;
+        let totalEnergyEarned = 0;
+        let totalClicks = 0;
+        let totalUpgrades = 0;
+        let prestigeCount = 0;
+        let missionIndex = 0;
+        let missionProgress = 0;
+        let unlockedAchievements = new Set();
+        let soundEnabled = false;
+        let motionEnabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let breakRemindersEnabled = false;
+        let breakSeconds = 0;
+        let breakTargetSeconds = BREAK_INTERVAL_SECONDS;
+        let gamePaused = false;
+        let audioContext;
+        let toastTimeout;
 
         const scoreEl = document.getElementById('score');
         const clickerBtn = document.getElementById('clicker');
         const saveStatus = document.getElementById('save-status');
         const clickStat = document.getElementById('click-stat');
         const rateStat = document.getElementById('rate-stat');
-        const upgradeElements = {
-            auto: {
-                button: document.getElementById('buy-auto'),
-                description: document.getElementById('auto-description'),
-                price: document.getElementById('auto-price')
-            },
-            power: {
-                button: document.getElementById('buy-multiplier'),
-                description: document.getElementById('power-description'),
-                price: document.getElementById('power-price')
-            },
-            reactor: {
-                button: document.getElementById('buy-reactor'),
-                description: document.getElementById('reactor-description'),
-                price: document.getElementById('reactor-price')
+        const soundToggle = document.getElementById('sound-toggle');
+        const motionToggle = document.getElementById('motion-toggle');
+        const pauseToggle = document.getElementById('pause-toggle');
+        const breakToggle = document.getElementById('break-toggle');
+        const breakReminder = document.getElementById('break-reminder');
+        const toast = document.getElementById('game-toast');
+        const upgradeElements = {};
+        const legacyUpgradeIds = { auto: 'buy-auto', power: 'buy-multiplier', reactor: 'buy-reactor' };
+
+        for (const [key, upgrade] of Object.entries(upgrades)) {
+            let button = document.getElementById(legacyUpgradeIds[key] || `buy-${key}`);
+            if (!button) {
+                button = document.createElement('button');
+                button.className = 'upgrade-button';
+                button.id = `buy-${key}`;
+                button.type = 'button';
+                button.innerHTML = `<span class="upgrade-icon" aria-hidden="true">${upgradeIcons[key]}</span><span><span class="upgrade-name"></span><span class="upgrade-description"></span></span><span class="upgrade-price"></span>`;
+                document.querySelector('.upgrade-list').append(button);
             }
-        };
+            const name = button.querySelector('.upgrade-name');
+            const description = button.querySelector('.upgrade-description');
+            name.textContent = upgrade.name.replace(/\b\w/g, character => character.toUpperCase());
+            description.id = `${key}-description`;
+            upgradeElements[key] = {
+                button,
+                name,
+                description,
+                price: button.querySelector('.upgrade-price')
+            };
+        }
+
+        function getMission() {
+            const definition = missions[missionIndex % missions.length];
+            const tier = Math.floor(missionIndex / missions.length);
+            return {
+                ...definition,
+                target: definition.target * 2 ** tier,
+                reward: definition.reward * 2 ** tier
+            };
+        }
+
+        function getPrestigeThreshold() {
+            return 100000 * (prestigeCount + 1);
+        }
+
+        function getPrestigeMultiplier() {
+            return 1 + prestigeCount * 0.05;
+        }
+
+        function getDiscountMultiplier() {
+            return Math.max(0.5, 1 - Math.min(10, upgrades.discount.owned) * 0.05);
+        }
 
         function getCost(upgrade) {
-            return Math.floor(upgrade.baseCost * upgrade.growth ** upgrade.owned);
+            return Math.floor(upgrade.baseCost * upgrade.growth ** upgrade.owned * getDiscountMultiplier());
         }
 
         function getClickPower() {
-            return 1 + upgrades.power.owned * upgrades.power.rate;
+            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier();
         }
 
         function getProductionRate() {
-            return upgrades.auto.owned * upgrades.auto.rate + upgrades.reactor.owned * upgrades.reactor.rate;
+            const baseRate = upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate;
+            return baseRate * getPrestigeMultiplier();
+        }
+
+        function playSound(frequency = 520) {
+            if (!soundEnabled || !window.AudioContext) return;
+            audioContext ??= new AudioContext();
+            if (audioContext.state === 'suspended') audioContext.resume();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            gain.gain.setValueAtTime(0.045, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.09);
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.09);
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.hidden = false;
+            window.clearTimeout(toastTimeout);
+            toastTimeout = window.setTimeout(() => { toast.hidden = true; }, 3200);
+        }
+
+        function recordProgress(type, amount) {
+            let remaining = amount;
+            while (remaining > 0) {
+                const mission = getMission();
+                if (mission.type !== type) break;
+                const needed = mission.target - missionProgress;
+                const added = Math.min(remaining, needed);
+                missionProgress += added;
+                remaining -= added;
+                if (missionProgress >= mission.target) {
+                    score += mission.reward;
+                    missionIndex++;
+                    missionProgress = 0;
+                    showToast(`Mission complete! +${numberFormat.format(mission.reward)} energy`);
+                    playSound(780);
+                }
+            }
+        }
+
+        function checkAchievements(announce = true) {
+            const stats = {
+                clicks: totalClicks,
+                earned: totalEnergyEarned,
+                upgrades: totalUpgrades,
+                prestiges: prestigeCount
+            };
+            for (const achievement of achievements) {
+                if (achievement.test(stats) && !unlockedAchievements.has(achievement.id)) {
+                    unlockedAchievements.add(achievement.id);
+                    if (announce) {
+                        showToast(`Achievement unlocked: ${achievement.name}`);
+                        playSound(900);
+                    }
+                }
+            }
+        }
+
+        function renderAchievements() {
+            const grid = document.getElementById('achievement-grid');
+            grid.replaceChildren();
+            for (const achievement of achievements) {
+                const unlocked = unlockedAchievements.has(achievement.id);
+                const item = document.createElement('div');
+                item.className = `achievement${unlocked ? ' unlocked' : ''}`;
+                item.innerHTML = `<span class="achievement-name"></span><span class="achievement-detail"></span>`;
+                item.querySelector('.achievement-name').textContent = `${unlocked ? '★' : '◇'} ${achievement.name}`;
+                item.querySelector('.achievement-detail').textContent = achievement.detail;
+                grid.append(item);
+            }
+            document.getElementById('achievement-count').textContent = `${unlockedAchievements.size} of ${achievements.length} unlocked`;
+        }
+
+        function renderMission() {
+            const mission = getMission();
+            const percent = Math.min(100, missionProgress / mission.target * 100);
+            document.getElementById('mission-description').textContent = `${mission.label} to complete mission ${missionIndex + 1}.`;
+            document.getElementById('mission-progress').textContent = `${numberFormat.format(missionProgress)} / ${numberFormat.format(mission.target)} ${mission.type}`;
+            document.getElementById('mission-reward').textContent = `Reward: ${numberFormat.format(mission.reward)} energy`;
+            document.getElementById('mission-bar').style.width = `${percent}%`;
+            const track = document.getElementById('mission-track');
+            track.setAttribute('aria-valuemax', String(mission.target));
+            track.setAttribute('aria-valuenow', String(Math.floor(missionProgress)));
         }
 
         function render() {
@@ -379,16 +691,40 @@
             rateStat.textContent = `${numberFormat.format(getProductionRate())} / sec`;
             document.getElementById('click-value').textContent = `+${numberFormat.format(getClickPower())} energy`;
 
-            Object.entries(upgradeElements).forEach(([key, elements]) => {
+            for (const [key, elements] of Object.entries(upgradeElements)) {
                 const upgrade = upgrades[key];
                 const cost = getCost(upgrade);
-                const unit = key === 'power' ? 'energy/click' : 'energy/sec';
-                const ownershipLabel = key === 'power' ? 'Level' : 'Owned';
-                elements.description.textContent = `+${upgrade.rate} ${unit} · ${ownershipLabel}: ${upgrade.owned}`;
-                elements.price.textContent = `${numberFormat.format(cost)} ⚡`;
-                elements.button.disabled = score < cost;
-                elements.button.setAttribute('aria-label', `Buy ${key === 'power' ? 'power cell' : key === 'auto' ? 'auto-clicker' : 'mini reactor'} for ${cost} energy`);
-            });
+                const capped = key === 'discount' && upgrade.owned >= 10;
+                elements.description.textContent = key === 'surge'
+                    ? `+${upgrade.rate}% click power · Level: ${upgrade.owned}`
+                    : key === 'discount'
+                        ? `${Math.min(10, upgrade.owned) * upgrade.rate}% lower costs · Level: ${upgrade.owned}/10`
+                        : `+${upgrade.rate} ${upgrade.unit} · ${upgrade.label}: ${upgrade.owned}`;
+                elements.price.textContent = capped ? 'MAX' : `${numberFormat.format(cost)} ⚡`;
+                elements.button.disabled = gamePaused || capped || score < cost;
+                elements.button.setAttribute('aria-label', capped ? `${upgrade.name} max level reached` : `Buy ${upgrade.name} for ${cost} energy`);
+            }
+
+            const threshold = getPrestigeThreshold();
+            document.getElementById('prestige-bonus').textContent = `Cores: ${prestigeCount} · Bonus: +${prestigeCount * 5}%`;
+            const prestigeButton = document.getElementById('prestige-button');
+            prestigeButton.disabled = gamePaused || totalEnergyEarned < threshold;
+            prestigeButton.textContent = prestigeButton.disabled
+                ? `Requires ${numberFormat.format(threshold)} earned`
+                : `Ascend for core ${prestigeCount + 1}`;
+            soundToggle.textContent = `Sound: ${soundEnabled ? 'On' : 'Off'}`;
+            soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+            motionToggle.textContent = `Motion: ${motionEnabled ? 'On' : 'Off'}`;
+            motionToggle.setAttribute('aria-pressed', String(motionEnabled));
+            pauseToggle.textContent = gamePaused ? 'Resume' : 'Pause';
+            pauseToggle.setAttribute('aria-pressed', String(gamePaused));
+            clickerBtn.disabled = gamePaused;
+            document.getElementById('paused-status').hidden = !gamePaused;
+            breakToggle.checked = breakRemindersEnabled;
+            breakReminder.hidden = !breakRemindersEnabled || breakSeconds < breakTargetSeconds;
+            document.body.classList.toggle('motion-off', !motionEnabled);
+            renderMission();
+            renderAchievements();
         }
 
         function saveGame() {
@@ -398,6 +734,20 @@
                     auto: upgrades.auto.owned,
                     power: upgrades.power.owned,
                     reactor: upgrades.reactor.owned,
+                    surge: upgrades.surge.owned,
+                    discount: upgrades.discount.owned,
+                    totalEnergyEarned,
+                    totalClicks,
+                    totalUpgrades,
+                    prestigeCount,
+                    missionIndex,
+                    missionProgress,
+                    unlockedAchievements: [...unlockedAchievements],
+                    soundEnabled,
+                    motionEnabled,
+                    breakRemindersEnabled,
+                    breakSeconds,
+                    breakTargetSeconds,
                     savedAt: Date.now()
                 }));
                 saveStatus.textContent = 'Progress saves automatically';
@@ -418,50 +768,137 @@
             }
 
             if (!saved || typeof saved !== 'object') return;
-            const validNonNegativeNumber = value => Number.isFinite(value) && value >= 0;
-            if (validNonNegativeNumber(saved.score)) score = saved.score;
+            const validNumber = value => Number.isFinite(value) && value >= 0;
+            const validInteger = value => Number.isSafeInteger(value) && value >= 0;
+            if (validNumber(saved.score)) score = saved.score;
             for (const key of Object.keys(upgrades)) {
-                if (Number.isSafeInteger(saved[key]) && saved[key] >= 0) {
-                    upgrades[key].owned = saved[key];
-                }
+                if (validInteger(saved[key])) upgrades[key].owned = saved[key];
             }
+            if (validNumber(saved.totalEnergyEarned)) totalEnergyEarned = saved.totalEnergyEarned;
+            if (validInteger(saved.totalClicks)) totalClicks = saved.totalClicks;
+            if (validInteger(saved.totalUpgrades)) totalUpgrades = saved.totalUpgrades;
+            if (validInteger(saved.prestigeCount)) prestigeCount = saved.prestigeCount;
+            if (validInteger(saved.missionIndex)) missionIndex = saved.missionIndex;
+            if (validNumber(saved.missionProgress)) missionProgress = saved.missionProgress;
+            if (Array.isArray(saved.unlockedAchievements)) {
+                const knownAchievementIds = new Set(achievements.map(achievement => achievement.id));
+                unlockedAchievements = new Set(saved.unlockedAchievements.filter(value => knownAchievementIds.has(value)));
+            }
+            if (typeof saved.soundEnabled === 'boolean') soundEnabled = saved.soundEnabled;
+            if (typeof saved.motionEnabled === 'boolean') motionEnabled = saved.motionEnabled;
+            if (typeof saved.breakRemindersEnabled === 'boolean') breakRemindersEnabled = saved.breakRemindersEnabled;
+            if (validNumber(saved.breakSeconds)) breakSeconds = saved.breakSeconds;
+            if (validNumber(saved.breakTargetSeconds)) breakTargetSeconds = saved.breakTargetSeconds;
 
-            if (validNonNegativeNumber(saved.savedAt)) {
+            checkAchievements(false);
+            if (validNumber(saved.savedAt)) {
                 const elapsedSeconds = Math.min(MAX_OFFLINE_SECONDS, Math.max(0, (Date.now() - saved.savedAt) / 1000));
-                score += getProductionRate() * elapsedSeconds;
+                const offlineEnergy = getProductionRate() * elapsedSeconds;
+                score += offlineEnergy;
+                totalEnergyEarned += offlineEnergy;
+                recordProgress('energy', offlineEnergy);
+                checkAchievements(false);
             }
         }
 
         function buyUpgrade(key) {
             const upgrade = upgrades[key];
             const cost = getCost(upgrade);
-            if (score < cost) return;
+            if (gamePaused || score < cost || (key === 'discount' && upgrade.owned >= 10)) return;
             score -= cost;
             upgrade.owned++;
+            totalUpgrades++;
+            recordProgress('upgrades', 1);
+            checkAchievements();
+            playSound(640);
             render();
             saveGame();
         }
 
+        function prestige() {
+            if (gamePaused || totalEnergyEarned < getPrestigeThreshold()) return;
+            if (!window.confirm(`Trade your current energy and upgrades for a permanent +5% production core? You have generated ${numberFormat.format(totalEnergyEarned)} energy in total.`)) return;
+            score = 0;
+            for (const upgrade of Object.values(upgrades)) upgrade.owned = 0;
+            prestigeCount++;
+            checkAchievements();
+            showToast(`Prestige complete! Production bonus: +${prestigeCount * 5}%`);
+            playSound(420);
+            render();
+            saveGame();
+        }
+
+        function addEnergy(amount) {
+            score += amount;
+            totalEnergyEarned += amount;
+            recordProgress('energy', amount);
+            checkAchievements();
+        }
+
         clickerBtn.addEventListener('click', () => {
-            score += getClickPower();
+            if (gamePaused) return;
+            totalClicks++;
+            addEnergy(getClickPower());
+            recordProgress('clicks', 1);
+            playSound();
             render();
             saveGame();
         });
 
-        Object.entries(upgradeElements).forEach(([key, elements]) => {
+        for (const [key, elements] of Object.entries(upgradeElements)) {
             elements.button.addEventListener('click', () => buyUpgrade(key));
+        }
+        document.getElementById('prestige-button').addEventListener('click', prestige);
+
+        soundToggle.disabled = !window.AudioContext;
+        pauseToggle.addEventListener('click', () => {
+            gamePaused = !gamePaused;
+            render();
+            saveGame();
+        });
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) playSound();
+            render();
+            saveGame();
+        });
+        motionToggle.addEventListener('click', () => {
+            motionEnabled = !motionEnabled;
+            render();
+            saveGame();
+        });
+        breakToggle.addEventListener('change', () => {
+            breakRemindersEnabled = breakToggle.checked;
+            breakSeconds = 0;
+            breakTargetSeconds = BREAK_INTERVAL_SECONDS;
+            render();
+            saveGame();
+        });
+        document.getElementById('break-snooze').addEventListener('click', () => {
+            breakSeconds = 0;
+            breakTargetSeconds = 10 * 60;
+            render();
+            saveGame();
+        });
+        document.getElementById('break-dismiss').addEventListener('click', () => {
+            breakSeconds = 0;
+            breakTargetSeconds = BREAK_INTERVAL_SECONDS;
+            render();
+            saveGame();
         });
 
         loadGame();
         render();
         saveGame();
         window.setInterval(() => {
+            if (gamePaused) return;
             const rate = getProductionRate();
-            if (rate > 0) {
-                score += rate;
-                render();
-                saveGame();
+            if (rate > 0) addEnergy(rate);
+            if (breakRemindersEnabled && document.visibilityState === 'visible' && breakSeconds < breakTargetSeconds) {
+                breakSeconds++;
             }
+            render();
+            saveGame();
         }, 1000);
     </script>
 </body>
