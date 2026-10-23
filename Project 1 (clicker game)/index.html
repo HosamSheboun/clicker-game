@@ -172,6 +172,18 @@
         .shop-heading { margin: 0; font-size: 1.3rem; letter-spacing: -0.03em; }
         .shop-intro { margin: 7px 0 20px; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
         .upgrade-list { display: grid; gap: 12px; }
+        .shop-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+        .shop-controls label { color: var(--muted); font-size: 0.78rem; font-weight: 650; }
+        .quantity-select {
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            color: #e8efff;
+            background: #111a30;
+            font: inherit;
+            font-size: 0.78rem;
+        }
+        .quantity-select:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 
         .upgrade-button {
             width: 100%;
@@ -272,6 +284,10 @@
 
         .extra-card h2 { margin: 0; font-size: 1rem; letter-spacing: -0.02em; }
         .extra-card p { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+        .lifetime-stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7, 12, 25, 0.35); }
+        .lifetime-stat span { display: block; color: var(--muted); font-size: 0.7rem; }
+        .lifetime-stat strong { display: block; margin-top: 5px; font-size: 0.98rem; font-variant-numeric: tabular-nums; }
         .mission-progress { margin: 12px 0 5px; color: var(--accent) !important; font-weight: 750; }
         .progress-track { height: 8px; overflow: hidden; border-radius: 99px; background: rgba(4, 9, 20, 0.7); }
         .progress-bar { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4ee4bd, #a5ffe7); transition: width 180ms ease; }
@@ -399,6 +415,14 @@
             <section class="shop" aria-labelledby="shop-title">
                 <h1 class="shop-heading" id="shop-title">Upgrade your lab</h1>
                 <p class="shop-intro">Invest energy in better equipment and let your production grow.</p>
+                <div class="shop-controls">
+                    <label for="buy-quantity">Buy quantity</label>
+                    <select class="quantity-select" id="buy-quantity">
+                        <option value="1">Buy 1</option>
+                        <option value="10">Buy 10</option>
+                        <option value="100">Buy 100</option>
+                    </select>
+                </div>
                 <div class="upgrade-list">
                     <button class="upgrade-button" id="buy-auto" type="button">
                         <span class="upgrade-icon" aria-hidden="true">⏱</span>
@@ -430,6 +454,17 @@
         </div>
 
         <section class="extras" aria-label="Goals and progression">
+            <article class="extra-card" aria-labelledby="stats-title">
+                <h2 id="stats-title">Lab statistics</h2>
+                <p>Your all-time progress, including energy generated before prestige resets.</p>
+                <div class="stats-grid">
+                    <div class="lifetime-stat"><span>Energy generated</span><strong id="lifetime-energy">0</strong></div>
+                    <div class="lifetime-stat"><span>Total clicks</span><strong id="lifetime-clicks">0</strong></div>
+                    <div class="lifetime-stat"><span>Upgrades purchased</span><strong id="lifetime-upgrades">0</strong></div>
+                    <div class="lifetime-stat"><span>Energy cores</span><strong id="lifetime-cores">0</strong></div>
+                </div>
+            </article>
+
             <article class="extra-card" aria-labelledby="mission-title">
                 <h2 id="mission-title">Lab mission</h2>
                 <p id="mission-description">Earn energy to complete your next mission.</p>
@@ -535,6 +570,7 @@
         const soundToggle = document.getElementById('sound-toggle');
         const motionToggle = document.getElementById('motion-toggle');
         const pauseToggle = document.getElementById('pause-toggle');
+        const quantitySelector = document.getElementById('buy-quantity');
         const breakToggle = document.getElementById('break-toggle');
         const breakReminder = document.getElementById('break-reminder');
         const toast = document.getElementById('game-toast');
@@ -585,8 +621,19 @@
             return Math.max(0.5, 1 - Math.min(10, upgrades.discount.owned) * 0.05);
         }
 
-        function getCost(upgrade) {
-            return Math.floor(upgrade.baseCost * upgrade.growth ** upgrade.owned * getDiscountMultiplier());
+        function getCost(upgrade, owned = upgrade.owned, discountOwned = upgrades.discount.owned) {
+            const discountMultiplier = Math.max(0.5, 1 - Math.min(10, discountOwned) * 0.05);
+            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier);
+        }
+
+        function getBundleCost(upgrade, quantity) {
+            let total = 0;
+            let discountOwned = upgrades.discount.owned;
+            for (let index = 0; index < quantity; index++) {
+                total += getCost(upgrade, upgrade.owned + index, discountOwned);
+                if (upgrade === upgrades.discount) discountOwned++;
+            }
+            return total;
         }
 
         function getClickPower() {
@@ -693,18 +740,26 @@
 
             for (const [key, elements] of Object.entries(upgradeElements)) {
                 const upgrade = upgrades[key];
-                const cost = getCost(upgrade);
+                const quantity = Number(quantitySelector.value);
+                const purchaseQuantity = key === 'discount' ? Math.min(quantity, 10 - upgrade.owned) : quantity;
+                const cost = getBundleCost(upgrade, purchaseQuantity);
                 const capped = key === 'discount' && upgrade.owned >= 10;
                 elements.description.textContent = key === 'surge'
                     ? `+${upgrade.rate}% click power · Level: ${upgrade.owned}`
                     : key === 'discount'
                         ? `${Math.min(10, upgrade.owned) * upgrade.rate}% lower costs · Level: ${upgrade.owned}/10`
                         : `+${upgrade.rate} ${upgrade.unit} · ${upgrade.label}: ${upgrade.owned}`;
-                elements.price.textContent = capped ? 'MAX' : `${numberFormat.format(cost)} ⚡`;
+                elements.price.textContent = capped ? 'MAX' : `${numberFormat.format(cost)} ⚡${purchaseQuantity > 1 ? ' total' : ''}`;
                 elements.button.disabled = gamePaused || capped || score < cost;
-                elements.button.setAttribute('aria-label', capped ? `${upgrade.name} max level reached` : `Buy ${upgrade.name} for ${cost} energy`);
+                elements.button.setAttribute('aria-label', capped
+                    ? `${upgrade.name} max level reached`
+                    : `Buy ${purchaseQuantity} ${upgrade.name}${purchaseQuantity === 1 ? '' : 's'} for ${cost} energy`);
             }
 
+            document.getElementById('lifetime-energy').textContent = numberFormat.format(Math.floor(totalEnergyEarned));
+            document.getElementById('lifetime-clicks').textContent = numberFormat.format(totalClicks);
+            document.getElementById('lifetime-upgrades').textContent = numberFormat.format(totalUpgrades);
+            document.getElementById('lifetime-cores').textContent = numberFormat.format(prestigeCount);
             const threshold = getPrestigeThreshold();
             document.getElementById('prestige-bonus').textContent = `Cores: ${prestigeCount} · Bonus: +${prestigeCount * 5}%`;
             const prestigeButton = document.getElementById('prestige-button');
@@ -748,6 +803,7 @@
                     breakRemindersEnabled,
                     breakSeconds,
                     breakTargetSeconds,
+                    buyQuantity: Number(quantitySelector.value),
                     savedAt: Date.now()
                 }));
                 saveStatus.textContent = 'Progress saves automatically';
@@ -789,6 +845,7 @@
             if (typeof saved.breakRemindersEnabled === 'boolean') breakRemindersEnabled = saved.breakRemindersEnabled;
             if (validNumber(saved.breakSeconds)) breakSeconds = saved.breakSeconds;
             if (validNumber(saved.breakTargetSeconds)) breakTargetSeconds = saved.breakTargetSeconds;
+            if ([1, 10, 100].includes(saved.buyQuantity)) quantitySelector.value = String(saved.buyQuantity);
 
             checkAchievements(false);
             if (validNumber(saved.savedAt)) {
@@ -803,12 +860,14 @@
 
         function buyUpgrade(key) {
             const upgrade = upgrades[key];
-            const cost = getCost(upgrade);
+            const quantity = Number(quantitySelector.value);
+            const actualQuantity = key === 'discount' ? Math.min(quantity, 10 - upgrade.owned) : quantity;
+            const cost = getBundleCost(upgrade, actualQuantity);
             if (gamePaused || score < cost || (key === 'discount' && upgrade.owned >= 10)) return;
             score -= cost;
-            upgrade.owned++;
-            totalUpgrades++;
-            recordProgress('upgrades', 1);
+            upgrade.owned += actualQuantity;
+            totalUpgrades += actualQuantity;
+            recordProgress('upgrades', actualQuantity);
             checkAchievements();
             playSound(640);
             render();
@@ -864,6 +923,10 @@
         });
         motionToggle.addEventListener('click', () => {
             motionEnabled = !motionEnabled;
+            render();
+            saveGame();
+        });
+        quantitySelector.addEventListener('change', () => {
             render();
             saveGame();
         });
