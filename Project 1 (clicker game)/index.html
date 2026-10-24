@@ -299,6 +299,17 @@
         .research-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.72rem; font-weight: 800; }
         .research-button:disabled { opacity: 0.5; cursor: not-allowed; }
         .research-button.unlockable:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
+        .crafting-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+        .crafting-balance { color: #ffd178; font-size: 0.8rem; font-weight: 800; }
+        .crafting-list { display: grid; gap: 12px; margin-top: 14px; }
+        .crafting-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(7, 12, 25, 0.35); }
+        .crafting-card h3 { margin: 0; font-size: 0.88rem; }
+        .crafting-card p { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.5; }
+        .crafting-cost { color: #ffd178; font-size: 0.76rem; font-weight: 800; }
+        .crafting-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        .crafting-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.72rem; font-weight: 800; }
+        .crafting-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .crafting-button.ready:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
         .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
         .lifetime-stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7, 12, 25, 0.35); }
         .lifetime-stat span { display: block; color: var(--muted); font-size: 0.7rem; }
@@ -508,6 +519,15 @@
                 <div class="research-grid" id="research-grid"></div>
             </article>
 
+            <article class="extra-card" aria-labelledby="crafting-title">
+                <h2 id="crafting-title">Resource crafting</h2>
+                <p>Turn excess energy into rare crystals, then forge specialized upgrades for your lab.</p>
+                <div class="crafting-topline">
+                    <span class="crafting-balance" id="crystal-balance">Crystals: 0</span>
+                </div>
+                <div class="crafting-list" id="crafting-list"></div>
+            </article>
+
             <article class="extra-card" aria-labelledby="settings-title">
                 <h2 id="settings-title">Play settings</h2>
                 <p>Sound and motion are optional. Break reminders are off unless you turn them on.</p>
@@ -566,6 +586,12 @@
             { id: 'flux-boost', title: 'Flux Boost', branch: 'Automation', cost: 2, description: '+20% auto and reactor output', requires: 'pressure-lines', apply: state => { state.automationMultiplier *= 1.2; } },
             { id: 'orbital-lattice', title: 'Orbital Lattice', branch: 'Prestige', cost: 3, description: '+12% prestige bonus', requires: 'flux-boost', apply: state => { state.prestigeMultiplier *= 1.12; } }
         ];
+        const craftingRecipes = [
+            { id: 'refine-crystal', name: 'Refine crystal', costEnergy: 250, costCrystals: 0, description: 'Convert excess energy into a rare crystal.', yield: 1, action: 'refine', apply: null },
+            { id: 'arc-repeater', name: 'Arc Repeater', costEnergy: 300, costCrystals: 2, description: '+12% click power per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.clickMultiplier *= 1 + count * 0.12; } },
+            { id: 'thermal-lattice', name: 'Thermal Lattice', costEnergy: 600, costCrystals: 3, description: '+18% passive production per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.productionMultiplier *= 1 + count * 0.18; } },
+            { id: 'quantum-weave', name: 'Quantum Weave', costEnergy: 900, costCrystals: 5, description: '-10% upgrade costs per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.costMultiplier *= 1 - count * 0.1; } }
+        ];
         const achievements = [
             { id: 'first-click', name: 'First spark', detail: 'Generate your first energy.', test: stats => stats.clicks >= 1 },
             { id: 'hundred-clicks', name: 'Getting warmed up', detail: 'Make 100 clicks.', test: stats => stats.clicks >= 100 },
@@ -584,6 +610,8 @@
         let missionIndex = 0;
         let missionProgress = 0;
         let researchSpentPoints = 0;
+        let crystals = 0;
+        let craftedLevels = { 'arc-repeater': 0, 'thermal-lattice': 0, 'quantum-weave': 0 };
         let unlockedResearches = new Set();
         let unlockedAchievements = new Set();
         let soundEnabled = false;
@@ -662,8 +690,24 @@
             return state;
         }
 
+        function getCraftingBonuses() {
+            const state = {
+                clickMultiplier: 1,
+                productionMultiplier: 1,
+                costMultiplier: 1,
+                automationMultiplier: 1,
+                prestigeMultiplier: 1
+            };
+            for (const recipe of craftingRecipes) {
+                if (recipe.action === 'craft' && (craftedLevels[recipe.id] || 0) > 0) {
+                    recipe.apply(state, craftedLevels[recipe.id]);
+                }
+            }
+            return state;
+        }
+
         function getPrestigeMultiplier() {
-            return (1 + prestigeCount * 0.05) * getResearchBonuses().prestigeMultiplier;
+            return (1 + prestigeCount * 0.05) * getResearchBonuses().prestigeMultiplier * getCraftingBonuses().prestigeMultiplier;
         }
 
         function getDiscountMultiplier() {
@@ -673,7 +717,8 @@
         function getCost(upgrade, owned = upgrade.owned, discountOwned = upgrades.discount.owned) {
             const discountMultiplier = Math.max(0.5, 1 - Math.min(10, discountOwned) * 0.05);
             const researchCostMultiplier = getResearchBonuses().costMultiplier;
-            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier);
+            const craftingCostMultiplier = getCraftingBonuses().costMultiplier;
+            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier * craftingCostMultiplier);
         }
 
         function getBundleCost(upgrade, quantity) {
@@ -687,14 +732,16 @@
         }
 
         function getClickPower() {
-            const bonuses = getResearchBonuses();
-            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier() * bonuses.clickMultiplier;
+            const researchBonuses = getResearchBonuses();
+            const craftingBonuses = getCraftingBonuses();
+            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier() * researchBonuses.clickMultiplier * craftingBonuses.clickMultiplier;
         }
 
         function getProductionRate() {
-            const bonuses = getResearchBonuses();
-            const baseRate = (upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate) * bonuses.automationMultiplier;
-            return baseRate * getPrestigeMultiplier() * bonuses.productionMultiplier;
+            const researchBonuses = getResearchBonuses();
+            const craftingBonuses = getCraftingBonuses();
+            const baseRate = (upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate) * researchBonuses.automationMultiplier * craftingBonuses.automationMultiplier;
+            return baseRate * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier;
         }
 
         function playSound(frequency = 520) {
@@ -809,6 +856,35 @@
             document.getElementById('research-points').textContent = `${available} point${available === 1 ? '' : 's'} available`;
         }
 
+        function renderCrafting() {
+            const list = document.getElementById('crafting-list');
+            list.replaceChildren();
+            document.getElementById('crystal-balance').textContent = `Crystals: ${numberFormat.format(crystals)}`;
+
+            for (const recipe of craftingRecipes) {
+                const level = recipe.action === 'craft' ? craftedLevels[recipe.id] || 0 : 0;
+                const card = document.createElement('div');
+                card.className = 'crafting-card';
+                const canAfford = recipe.action === 'refine'
+                    ? score >= recipe.costEnergy
+                    : score >= recipe.costEnergy && crystals >= recipe.costCrystals;
+                const buttonLabel = recipe.action === 'refine' ? 'Refine' : 'Craft';
+                card.innerHTML = `
+                    <h3>${recipe.name}</h3>
+                    <p>${recipe.description}</p>
+                    <div class="crafting-footer">
+                        <span class="crafting-cost">${recipe.action === 'refine' ? `${recipe.costEnergy} ⚡` : `${recipe.costEnergy} ⚡ · ${recipe.costCrystals} crystals`}${recipe.action === 'craft' ? ` · Lvl ${level}` : ''}</span>
+                        <button class="crafting-button ${canAfford ? 'ready' : ''}" type="button" ${canAfford ? '' : 'disabled'}>${buttonLabel}</button>
+                    </div>
+                `;
+                card.querySelector('.crafting-button').addEventListener('click', () => {
+                    if (recipe.action === 'refine') refineCrystal();
+                    else craftRecipe(recipe.id);
+                });
+                list.append(card);
+            }
+        }
+
         function renderMission() {
             const mission = getMission();
             const percent = Math.min(100, missionProgress / mission.target * 100);
@@ -868,6 +944,7 @@
             breakReminder.hidden = !breakRemindersEnabled || breakSeconds < breakTargetSeconds;
             document.body.classList.toggle('motion-off', !motionEnabled);
             renderResearches();
+            renderCrafting();
             renderMission();
             renderAchievements();
         }
@@ -888,6 +965,8 @@
                     missionIndex,
                     missionProgress,
                     researchSpentPoints,
+                    crystals,
+                    craftedLevels,
                     unlockedResearches: [...unlockedResearches],
                     unlockedAchievements: [...unlockedAchievements],
                     soundEnabled,
@@ -929,6 +1008,13 @@
             if (validInteger(saved.missionIndex)) missionIndex = saved.missionIndex;
             if (validNumber(saved.missionProgress)) missionProgress = saved.missionProgress;
             if (validInteger(saved.researchSpentPoints)) researchSpentPoints = saved.researchSpentPoints;
+            if (validNumber(saved.crystals)) crystals = saved.crystals;
+            if (saved.craftedLevels && typeof saved.craftedLevels === 'object') {
+                for (const recipe of craftingRecipes.filter(item => item.action === 'craft')) {
+                    const value = Number(saved.craftedLevels[recipe.id]);
+                    if (Number.isFinite(value) && value >= 0) craftedLevels[recipe.id] = value;
+                }
+            }
             if (Array.isArray(saved.unlockedResearches)) {
                 unlockedResearches = new Set(saved.unlockedResearches.filter(value => researchTree.some(research => research.id === value)));
             }
@@ -980,6 +1066,30 @@
             researchSpentPoints += research.cost;
             showToast(`Research complete: ${research.title}`);
             playSound(760);
+            render();
+            saveGame();
+        }
+
+        function refineCrystal() {
+            const recipe = craftingRecipes.find(item => item.id === 'refine-crystal');
+            if (!recipe || score < recipe.costEnergy) return;
+            score -= recipe.costEnergy;
+            crystals += recipe.yield;
+            showToast('Crystal refined: +1 crystal');
+            playSound(700);
+            render();
+            saveGame();
+        }
+
+        function craftRecipe(recipeId) {
+            const recipe = craftingRecipes.find(item => item.id === recipeId);
+            if (!recipe || recipe.action !== 'craft') return;
+            if (score < recipe.costEnergy || crystals < recipe.costCrystals) return;
+            score -= recipe.costEnergy;
+            crystals -= recipe.costCrystals;
+            craftedLevels[recipe.id] = (craftedLevels[recipe.id] || 0) + 1;
+            showToast(`${recipe.name} forged`);
+            playSound(820);
             render();
             saveGame();
         }

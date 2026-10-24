@@ -12,7 +12,7 @@ This document tracks the planned major updates and records what has been complet
 |---|---|---|---|
 | 1 | Lab Management | Bulk-buy upgrades and track lifetime statistics. | **Done** |
 | 2 | Research Tree | Add unlockable research branches with choices that shape a play style. | **Done** |
-| 3 | Resource Crafting | Introduce another resource and recipes for specialized upgrades. | Planned |
+| 3 | Resource Crafting | Introduce another resource and recipes for specialized upgrades. | **Done** |
 | 4 | Factory Builder | Let players arrange production modules and connect automation chains. | Planned |
 | 5 | Exploration Map | Unlock locations with distinct production bonuses and visual themes. | Planned |
 | 6 | Challenge Runs | Add optional scenarios with unique rules and rewards. | Planned |
@@ -46,15 +46,25 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Applied research bonuses to click output, passive generation, upgrade costs, and prestige scaling.
 - Added a dedicated research panel with unlock states, branch labels, and point tracking.
 
+### Update 3 — Resource Crafting
+
+**Status:** Complete  
+**Date:** 2026-10-24
+
+- Added crystal refinement and three craftable specialty upgrades.
+- Resource crafting grants permanent bonuses to click power, passive generation, and upgrade costs.
+- Saved crystal totals and crafted-upgrade levels with the browser save data.
+
 ## Current game features
 
 - Click-to-generate energy and passive production.
 - Five upgrade types, including click-power and cost-reduction upgrades.
 - Research tree with permanent branch upgrades and prerequisite locks.
+- Resource crafting with crystals and specialized upgrades.
 - Missions, achievements, and prestige.
 - Automatic local saves and capped offline production.
 - Optional sound, motion, and break-reminder settings, plus pause/resume.
-- Bulk upgrade purchases, lifetime statistics, and research progression.
+- Bulk upgrade purchases, lifetime statistics, research progression, and crafting.
 
 ## Development notes
 
