@@ -11,7 +11,7 @@ This document tracks the planned major updates and records what has been complet
 | # | Major update | Scope | Status |
 |---|---|---|---|
 | 1 | Lab Management | Bulk-buy upgrades and track lifetime statistics. | **Done** |
-| 2 | Research Tree | Add unlockable research branches with choices that shape a play style. | Planned |
+| 2 | Research Tree | Add unlockable research branches with choices that shape a play style. | **Done** |
 | 3 | Resource Crafting | Introduce another resource and recipes for specialized upgrades. | Planned |
 | 4 | Factory Builder | Let players arrange production modules and connect automation chains. | Planned |
 | 5 | Exploration Map | Unlock locations with distinct production bonuses and visual themes. | Planned |
@@ -36,14 +36,25 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Saved the selected purchase quantity with existing browser save data.
 - Verified bulk purchase pricing, stats and selection persistence after reload, discount progression and level-cap behavior, and a narrow mobile viewport.
 
+### Update 2 — Research Tree
+
+**Status:** Complete  
+**Date:** 2026-10-24
+
+- Added a permanent research tree with branch-based upgrades and prerequisite locks.
+- Earned research points from lifetime energy generation; points persist in browser saves.
+- Applied research bonuses to click output, passive generation, upgrade costs, and prestige scaling.
+- Added a dedicated research panel with unlock states, branch labels, and point tracking.
+
 ## Current game features
 
 - Click-to-generate energy and passive production.
 - Five upgrade types, including click-power and cost-reduction upgrades.
+- Research tree with permanent branch upgrades and prerequisite locks.
 - Missions, achievements, and prestige.
 - Automatic local saves and capped offline production.
 - Optional sound, motion, and break-reminder settings, plus pause/resume.
-- Bulk upgrade purchases and lifetime statistics (Update 1).
+- Bulk upgrade purchases, lifetime statistics, and research progression.
 
 ## Development notes
 

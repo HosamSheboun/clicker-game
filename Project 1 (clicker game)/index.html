@@ -284,6 +284,21 @@
 
         .extra-card h2 { margin: 0; font-size: 1rem; letter-spacing: -0.02em; }
         .extra-card p { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+        .research-points-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+        .research-points { color: var(--accent); font-size: 0.8rem; font-weight: 800; }
+        .research-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+        .research-node { display: flex; flex-direction: column; gap: 10px; min-height: 150px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(7, 12, 25, 0.35); }
+        .research-node.unlocked { border-color: rgba(115, 251, 211, 0.45); background: rgba(115, 251, 211, 0.06); }
+        .research-node.locked { opacity: 0.72; }
+        .research-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .research-tag { display: inline-flex; padding: 4px 7px; border-radius: 999px; background: rgba(169, 139, 255, 0.12); color: var(--violet); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+        .research-node h3 { margin: 0; font-size: 0.9rem; }
+        .research-node p { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.5; }
+        .research-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        .research-cost { color: #ffd178; font-size: 0.76rem; font-weight: 800; }
+        .research-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.72rem; font-weight: 800; }
+        .research-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .research-button.unlockable:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
         .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
         .lifetime-stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7, 12, 25, 0.35); }
         .lifetime-stat span { display: block; color: var(--muted); font-size: 0.7rem; }
@@ -484,6 +499,15 @@
                 </div>
             </article>
 
+            <article class="extra-card" aria-labelledby="research-title">
+                <h2 id="research-title">Research tree</h2>
+                <p>Spend research points to unlock permanent upgrades across your lab.</p>
+                <div class="research-points-row">
+                    <span class="research-points" id="research-points">0 points available</span>
+                </div>
+                <div class="research-grid" id="research-grid"></div>
+            </article>
+
             <article class="extra-card" aria-labelledby="settings-title">
                 <h2 id="settings-title">Play settings</h2>
                 <p>Sound and motion are optional. Break reminders are off unless you turn them on.</p>
@@ -535,6 +559,13 @@
             { type: 'energy', target: 10000, reward: 2000, label: 'Generate energy' },
             { type: 'clicks', target: 250, reward: 500, label: 'Make clicks' }
         ];
+        const researchTree = [
+            { id: 'core-tuning', title: 'Core Tuning', branch: 'Power', cost: 1, description: '+12% click power', requires: null, apply: state => { state.clickMultiplier *= 1.12; } },
+            { id: 'pressure-lines', title: 'Pressure Lines', branch: 'Production', cost: 1, description: '+15% passive output', requires: null, apply: state => { state.productionMultiplier *= 1.15; } },
+            { id: 'circuit-webs', title: 'Circuit Webs', branch: 'Efficiency', cost: 2, description: '-8% upgrade costs', requires: 'core-tuning', apply: state => { state.costMultiplier *= 0.92; } },
+            { id: 'flux-boost', title: 'Flux Boost', branch: 'Automation', cost: 2, description: '+20% auto and reactor output', requires: 'pressure-lines', apply: state => { state.automationMultiplier *= 1.2; } },
+            { id: 'orbital-lattice', title: 'Orbital Lattice', branch: 'Prestige', cost: 3, description: '+12% prestige bonus', requires: 'flux-boost', apply: state => { state.prestigeMultiplier *= 1.12; } }
+        ];
         const achievements = [
             { id: 'first-click', name: 'First spark', detail: 'Generate your first energy.', test: stats => stats.clicks >= 1 },
             { id: 'hundred-clicks', name: 'Getting warmed up', detail: 'Make 100 clicks.', test: stats => stats.clicks >= 100 },
@@ -552,6 +583,8 @@
         let prestigeCount = 0;
         let missionIndex = 0;
         let missionProgress = 0;
+        let researchSpentPoints = 0;
+        let unlockedResearches = new Set();
         let unlockedAchievements = new Set();
         let soundEnabled = false;
         let motionEnabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -613,8 +646,24 @@
             return 100000 * (prestigeCount + 1);
         }
 
+        function getResearchBonuses() {
+            const state = {
+                clickMultiplier: 1,
+                productionMultiplier: 1,
+                costMultiplier: 1,
+                automationMultiplier: 1,
+                prestigeMultiplier: 1
+            };
+            for (const research of researchTree) {
+                if (unlockedResearches.has(research.id)) {
+                    research.apply(state);
+                }
+            }
+            return state;
+        }
+
         function getPrestigeMultiplier() {
-            return 1 + prestigeCount * 0.05;
+            return (1 + prestigeCount * 0.05) * getResearchBonuses().prestigeMultiplier;
         }
 
         function getDiscountMultiplier() {
@@ -623,7 +672,8 @@
 
         function getCost(upgrade, owned = upgrade.owned, discountOwned = upgrades.discount.owned) {
             const discountMultiplier = Math.max(0.5, 1 - Math.min(10, discountOwned) * 0.05);
-            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier);
+            const researchCostMultiplier = getResearchBonuses().costMultiplier;
+            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier);
         }
 
         function getBundleCost(upgrade, quantity) {
@@ -637,12 +687,14 @@
         }
 
         function getClickPower() {
-            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier();
+            const bonuses = getResearchBonuses();
+            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier() * bonuses.clickMultiplier;
         }
 
         function getProductionRate() {
-            const baseRate = upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate;
-            return baseRate * getPrestigeMultiplier();
+            const bonuses = getResearchBonuses();
+            const baseRate = (upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate) * bonuses.automationMultiplier;
+            return baseRate * getPrestigeMultiplier() * bonuses.productionMultiplier;
         }
 
         function playSound(frequency = 520) {
@@ -720,6 +772,43 @@
             document.getElementById('achievement-count').textContent = `${unlockedAchievements.size} of ${achievements.length} unlocked`;
         }
 
+        function getAvailableResearchPoints() {
+            return Math.max(0, Math.floor(totalEnergyEarned / 5000) - researchSpentPoints);
+        }
+
+        function renderResearches() {
+            const grid = document.getElementById('research-grid');
+            const available = getAvailableResearchPoints();
+            grid.replaceChildren();
+
+            for (const research of researchTree) {
+                const unlocked = unlockedResearches.has(research.id);
+                const prereqMet = research.requires ? unlockedResearches.has(research.requires) : true;
+                const card = document.createElement('div');
+                card.className = `research-node ${unlocked ? 'unlocked' : prereqMet ? 'ready' : 'locked'}`;
+                card.innerHTML = `
+                    <div class="research-header">
+                        <span class="research-tag">${research.branch}</span>
+                    </div>
+                    <div>
+                        <h3>${research.title}</h3>
+                        <p>${research.description}</p>
+                    </div>
+                    <div class="research-footer">
+                        <span class="research-cost">${research.cost} pt</span>
+                        <button class="research-button ${prereqMet && available >= research.cost && !unlocked ? 'unlockable' : ''}" type="button" ${unlocked || !prereqMet || available < research.cost ? 'disabled' : ''}>
+                            ${unlocked ? 'Unlocked' : prereqMet ? 'Unlock' : 'Locked'}
+                        </button>
+                    </div>
+                `;
+                const button = card.querySelector('.research-button');
+                button.addEventListener('click', () => buyResearch(research.id));
+                grid.append(card);
+            }
+
+            document.getElementById('research-points').textContent = `${available} point${available === 1 ? '' : 's'} available`;
+        }
+
         function renderMission() {
             const mission = getMission();
             const percent = Math.min(100, missionProgress / mission.target * 100);
@@ -778,6 +867,7 @@
             breakToggle.checked = breakRemindersEnabled;
             breakReminder.hidden = !breakRemindersEnabled || breakSeconds < breakTargetSeconds;
             document.body.classList.toggle('motion-off', !motionEnabled);
+            renderResearches();
             renderMission();
             renderAchievements();
         }
@@ -797,6 +887,8 @@
                     prestigeCount,
                     missionIndex,
                     missionProgress,
+                    researchSpentPoints,
+                    unlockedResearches: [...unlockedResearches],
                     unlockedAchievements: [...unlockedAchievements],
                     soundEnabled,
                     motionEnabled,
@@ -836,6 +928,10 @@
             if (validInteger(saved.prestigeCount)) prestigeCount = saved.prestigeCount;
             if (validInteger(saved.missionIndex)) missionIndex = saved.missionIndex;
             if (validNumber(saved.missionProgress)) missionProgress = saved.missionProgress;
+            if (validInteger(saved.researchSpentPoints)) researchSpentPoints = saved.researchSpentPoints;
+            if (Array.isArray(saved.unlockedResearches)) {
+                unlockedResearches = new Set(saved.unlockedResearches.filter(value => researchTree.some(research => research.id === value)));
+            }
             if (Array.isArray(saved.unlockedAchievements)) {
                 const knownAchievementIds = new Set(achievements.map(achievement => achievement.id));
                 unlockedAchievements = new Set(saved.unlockedAchievements.filter(value => knownAchievementIds.has(value)));
@@ -870,6 +966,20 @@
             recordProgress('upgrades', actualQuantity);
             checkAchievements();
             playSound(640);
+            render();
+            saveGame();
+        }
+
+        function buyResearch(researchId) {
+            const research = researchTree.find(item => item.id === researchId);
+            if (!research || unlockedResearches.has(researchId)) return;
+            if (research.requires && !unlockedResearches.has(research.requires)) return;
+            const available = getAvailableResearchPoints();
+            if (available < research.cost) return;
+            unlockedResearches.add(researchId);
+            researchSpentPoints += research.cost;
+            showToast(`Research complete: ${research.title}`);
+            playSound(760);
             render();
             saveGame();
         }
