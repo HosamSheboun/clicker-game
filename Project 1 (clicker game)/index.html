@@ -615,7 +615,7 @@
             { id: 'refine-crystal', name: 'Refine crystal', costEnergy: 250, costCrystals: 0, description: 'Convert excess energy into a rare crystal.', yield: 1, action: 'refine', apply: null },
             { id: 'arc-repeater', name: 'Arc Repeater', costEnergy: 300, costCrystals: 2, description: '+12% click power per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.clickMultiplier *= 1 + count * 0.12; } },
             { id: 'thermal-lattice', name: 'Thermal Lattice', costEnergy: 600, costCrystals: 3, description: '+18% passive production per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.productionMultiplier *= 1 + count * 0.18; } },
-            { id: 'quantum-weave', name: 'Quantum Weave', costEnergy: 900, costCrystals: 5, description: '-10% upgrade costs per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.costMultiplier *= 1 - count * 0.1; } }
+            { id: 'quantum-weave', name: 'Quantum Weave', costEnergy: 900, costCrystals: 5, description: '-10% upgrade costs per craft, up to 90%.', yield: 0, action: 'craft', apply: (state, count) => { state.costMultiplier *= Math.max(0.1, 1 - count * 0.1); } }
         ];
         const factoryModules = [
             { id: 'drill', name: 'Energy drill', cost: 1500, output: 12, description: '+12 energy/sec per module.' },
@@ -753,12 +753,11 @@
                 automationMultiplier: 1,
                 prestigeMultiplier: 1
             };
-            if (factoryCounts.drill > 0) state.productionMultiplier *= 1 + factoryCounts.drill * 0.12;
-            if (factoryCounts.smelter > 0) state.automationMultiplier *= 1 + factoryCounts.smelter * 0.1;
-            if (factoryCounts.assembler > 0) {
-                state.clickMultiplier *= 1 + factoryCounts.assembler * 0.14;
-                state.productionMultiplier *= 1 + factoryCounts.assembler * 0.14;
-                state.costMultiplier *= 1 - factoryCounts.assembler * 0.07;
+            const assembler = factoryModules.find(module => module.id === 'assembler');
+            if (factoryCounts.assembler > 0 && assembler) {
+                const outputMultiplier = 1 + factoryCounts.assembler * assembler.output;
+                state.clickMultiplier *= outputMultiplier;
+                state.productionMultiplier *= outputMultiplier;
             }
             return state;
         }
@@ -795,7 +794,7 @@
             const craftingCostMultiplier = getCraftingBonuses().costMultiplier;
             const factoryCostMultiplier = getFactoryBonuses().costMultiplier;
             const explorationCostMultiplier = getExplorationBonuses().costMultiplier;
-            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier * craftingCostMultiplier * factoryCostMultiplier * explorationCostMultiplier);
+            return Math.max(1, Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier * craftingCostMultiplier * factoryCostMultiplier * explorationCostMultiplier));
         }
 
         function getBundleCost(upgrade, quantity) {
@@ -822,8 +821,18 @@
             const factoryBonuses = getFactoryBonuses();
             const explorationBonuses = getExplorationBonuses();
             const baseRate = (upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate) * researchBonuses.automationMultiplier * craftingBonuses.automationMultiplier * factoryBonuses.automationMultiplier * explorationBonuses.automationMultiplier;
-            const moduleBoost = factoryCounts.drill * 12 + factoryCounts.assembler * 10;
+            const drill = factoryModules.find(module => module.id === 'drill');
+            const moduleBoost = factoryCounts.drill * drill.output;
             return (baseRate + moduleBoost) * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier * factoryBonuses.productionMultiplier * explorationBonuses.productionMultiplier;
+        }
+
+        function getCrystalProductionRate() {
+            const smelter = factoryModules.find(module => module.id === 'smelter');
+            const researchBonuses = getResearchBonuses();
+            const craftingBonuses = getCraftingBonuses();
+            const factoryBonuses = getFactoryBonuses();
+            const explorationBonuses = getExplorationBonuses();
+            return factoryCounts.smelter * smelter.output * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier * factoryBonuses.productionMultiplier * explorationBonuses.productionMultiplier;
         }
 
         function playSound(frequency = 520) {
@@ -925,7 +934,7 @@
                     </div>
                     <div class="research-footer">
                         <span class="research-cost">${research.cost} pt</span>
-                        <button class="research-button ${prereqMet && available >= research.cost && !unlocked ? 'unlockable' : ''}" type="button" ${unlocked || !prereqMet || available < research.cost ? 'disabled' : ''}>
+                        <button class="research-button ${prereqMet && available >= research.cost && !unlocked && !gamePaused ? 'unlockable' : ''}" type="button" ${gamePaused || unlocked || !prereqMet || available < research.cost ? 'disabled' : ''}>
                             ${unlocked ? 'Unlocked' : prereqMet ? 'Unlock' : 'Locked'}
                         </button>
                     </div>
@@ -947,9 +956,9 @@
                 const level = recipe.action === 'craft' ? craftedLevels[recipe.id] || 0 : 0;
                 const card = document.createElement('div');
                 card.className = 'crafting-card';
-                const canAfford = recipe.action === 'refine'
+                const canAfford = !gamePaused && (recipe.action === 'refine'
                     ? score >= recipe.costEnergy
-                    : score >= recipe.costEnergy && crystals >= recipe.costCrystals;
+                    : score >= recipe.costEnergy && crystals >= recipe.costCrystals);
                 const buttonLabel = recipe.action === 'refine' ? 'Refine' : 'Craft';
                 card.innerHTML = `
                     <h3>${recipe.name}</h3>
@@ -973,9 +982,9 @@
             for (const module of factoryModules) {
                 const count = factoryCounts[module.id] || 0;
                 const cost = module.cost * (count + 1) * 1.35;
-                const canAfford = score >= cost;
+                const canAfford = !gamePaused && score >= cost;
                 const card = document.createElement('div');
-                card.className = 'odule-card';
+                card.className = 'module-card';
                 card.innerHTML = `
                     <h3>${module.name}</h3>
                     <p>${module.description}</p>
@@ -995,7 +1004,7 @@
             for (const sector of explorationSectors) {
                 const unlocked = unlockedSectors.has(sector.id);
                 const cost = sector.cost;
-                const canAfford = score >= cost;
+                const canAfford = !gamePaused && score >= cost;
                 const card = document.createElement('div');
                 card.className = 'sector-card';
                 card.innerHTML = `
@@ -1059,7 +1068,7 @@
             const prestigeButton = document.getElementById('prestige-button');
             prestigeButton.disabled = gamePaused || totalEnergyEarned < threshold;
             prestigeButton.textContent = prestigeButton.disabled
-                ? `Requires ${numberFormat.format(threshold)} earned`
+                ? gamePaused ? 'Game paused' : `Requires ${numberFormat.format(threshold)} earned`
                 : `Ascend for core ${prestigeCount + 1}`;
             soundToggle.textContent = `Sound: ${soundEnabled ? 'On' : 'Off'}`;
             soundToggle.setAttribute('aria-pressed', String(soundEnabled));
@@ -1175,8 +1184,10 @@
             if (validNumber(saved.savedAt)) {
                 const elapsedSeconds = Math.min(MAX_OFFLINE_SECONDS, Math.max(0, (Date.now() - saved.savedAt) / 1000));
                 const offlineEnergy = getProductionRate() * elapsedSeconds;
+                const offlineCrystals = getCrystalProductionRate() * elapsedSeconds;
                 score += offlineEnergy;
                 totalEnergyEarned += offlineEnergy;
+                crystals += offlineCrystals;
                 recordProgress('energy', offlineEnergy);
                 checkAchievements(false);
             }
@@ -1200,7 +1211,7 @@
 
         function buyResearch(researchId) {
             const research = researchTree.find(item => item.id === researchId);
-            if (!research || unlockedResearches.has(researchId)) return;
+            if (gamePaused || !research || unlockedResearches.has(researchId)) return;
             if (research.requires && !unlockedResearches.has(research.requires)) return;
             const available = getAvailableResearchPoints();
             if (available < research.cost) return;
@@ -1214,7 +1225,7 @@
 
         function refineCrystal() {
             const recipe = craftingRecipes.find(item => item.id === 'refine-crystal');
-            if (!recipe || score < recipe.costEnergy) return;
+            if (gamePaused || !recipe || score < recipe.costEnergy) return;
             score -= recipe.costEnergy;
             crystals += recipe.yield;
             showToast('Crystal refined: +1 crystal');
@@ -1225,7 +1236,7 @@
 
         function craftRecipe(recipeId) {
             const recipe = craftingRecipes.find(item => item.id === recipeId);
-            if (!recipe || recipe.action !== 'craft') return;
+            if (gamePaused || !recipe || recipe.action !== 'craft') return;
             if (score < recipe.costEnergy || crystals < recipe.costCrystals) return;
             score -= recipe.costEnergy;
             crystals -= recipe.costCrystals;
@@ -1238,7 +1249,7 @@
 
         function buyFactoryModule(moduleId) {
             const module = factoryModules.find(item => item.id === moduleId);
-            if (!module) return;
+            if (gamePaused || !module) return;
             const count = factoryCounts[moduleId] || 0;
             const cost = module.cost * (count + 1) * 1.35;
             if (score < cost) return;
@@ -1252,7 +1263,7 @@
 
         function unlockSector(sectorId) {
             const sector = explorationSectors.find(item => item.id === sectorId);
-            if (!sector || unlockedSectors.has(sectorId)) return;
+            if (gamePaused || !sector || unlockedSectors.has(sectorId)) return;
             if (score < sector.cost) return;
             score -= sector.cost;
             unlockedSectors.add(sectorId);
@@ -1346,9 +1357,7 @@
             if (gamePaused) return;
             const rate = getProductionRate();
             if (rate > 0) addEnergy(rate);
-            if (factoryCounts.smelter > 0) {
-                crystals += factoryCounts.smelter * 0.25;
-            }
+            crystals += getCrystalProductionRate();
             if (breakRemindersEnabled && document.visibilityState === 'visible' && breakSeconds < breakTargetSeconds) {
                 breakSeconds++;
             }
