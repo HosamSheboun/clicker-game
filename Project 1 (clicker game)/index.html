@@ -319,6 +319,18 @@
         .module-button, .sector-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.72rem; font-weight: 800; }
         .module-button:disabled, .sector-button:disabled { opacity: 0.5; cursor: not-allowed; }
         .module-button.ready:not(:disabled), .sector-button.ready:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
+        .challenge-list { display: grid; gap: 12px; margin-top: 14px; }
+        .challenge-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(7, 12, 25, 0.35); }
+        .challenge-card.active { border-color: rgba(115, 251, 211, 0.5); }
+        .challenge-card.completed { border-color: rgba(255, 209, 120, 0.45); }
+        .challenge-card h3 { margin: 0; font-size: 0.88rem; }
+        .challenge-card p { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.5; }
+        .challenge-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        .challenge-reward { color: #ffd178; font-size: 0.76rem; font-weight: 800; }
+        .challenge-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.72rem; font-weight: 800; }
+        .challenge-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .challenge-button.ready:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
+        .challenge-status { margin: 12px 0 0; color: var(--accent); font-size: 0.78rem; font-weight: 750; }
         .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
         .lifetime-stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7, 12, 25, 0.35); }
         .lifetime-stat span { display: block; color: var(--muted); font-size: 0.7rem; }
@@ -514,6 +526,13 @@
                 <p id="mission-reward">Reward: 25 energy</p>
             </article>
 
+            <article class="extra-card" aria-labelledby="challenges-title">
+                <h2 id="challenges-title">Challenge runs</h2>
+                <p>Complete a timed goal to earn a one-time crystal reward. Pause freezes an active run.</p>
+                <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">Choose a run to begin.</p>
+                <div class="challenge-list" id="challenge-list"></div>
+            </article>
+
             <article class="extra-card" aria-labelledby="prestige-title">
                 <h2 id="prestige-title">Prestige</h2>
                 <p>Reset your energy and equipment to earn a permanent production bonus. Your achievements and lifetime stats stay.</p>
@@ -637,6 +656,11 @@
             { id: 'upgrade-25', name: 'Chief engineer', detail: 'Buy 25 upgrades.', test: stats => stats.upgrades >= 25 },
             { id: 'first-prestige', name: 'New beginnings', detail: 'Earn your first energy core.', test: stats => stats.prestiges >= 1 }
         ];
+        const challenges = [
+            { id: 'rapid-sequence', name: 'Rapid sequence', description: 'Make 20 manual clicks in 12 seconds.', type: 'clicks', target: 20, duration: 12, reward: 3, unit: 'clicks' },
+            { id: 'energy-surge', name: 'Energy surge', description: 'Generate 500 energy in 30 seconds.', type: 'energy', target: 500, duration: 30, reward: 5, unit: 'energy' },
+            { id: 'upgrade-rush', name: 'Upgrade rush', description: 'Buy 3 upgrade levels in 25 seconds.', type: 'upgrades', target: 3, duration: 25, reward: 4, unit: 'levels' }
+        ];
         let score = 0;
         let totalEnergyEarned = 0;
         let totalClicks = 0;
@@ -652,6 +676,10 @@
         let unlockedSectors = new Set();
         let unlockedResearches = new Set();
         let unlockedAchievements = new Set();
+        let completedChallenges = new Set();
+        let activeChallengeId = null;
+        let challengeProgress = 0;
+        let challengeSecondsRemaining = 0;
         let soundEnabled = false;
         let motionEnabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let breakRemindersEnabled = false;
@@ -1032,6 +1060,75 @@
             track.setAttribute('aria-valuenow', String(Math.floor(missionProgress)));
         }
 
+        function renderChallenges() {
+            const list = document.getElementById('challenge-list');
+            list.replaceChildren();
+            const activeChallenge = challenges.find(challenge => challenge.id === activeChallengeId);
+            document.getElementById('challenge-status').textContent = activeChallenge
+                ? `${gamePaused ? 'Paused' : 'Active'}: ${activeChallenge.name} · ${challengeSecondsRemaining}s remaining`
+                : 'Choose a run to begin.';
+
+            for (const challenge of challenges) {
+                const active = activeChallengeId === challenge.id;
+                const completed = completedChallenges.has(challenge.id);
+                const progress = active ? challengeProgress : completed ? challenge.target : 0;
+                const percent = Math.min(100, progress / challenge.target * 100);
+                const disabled = gamePaused || Boolean(activeChallengeId) || completed;
+                const card = document.createElement('article');
+                card.className = `challenge-card${active ? ' active' : ''}${completed ? ' completed' : ''}`;
+                card.innerHTML = `
+                    <h3>${challenge.name}</h3>
+                    <p>${challenge.description}</p>
+                    <div class="progress-track" role="progressbar" aria-label="${challenge.name} progress" aria-valuemin="0" aria-valuemax="${challenge.target}" aria-valuenow="${Math.floor(progress)}">
+                        <div class="progress-bar" style="width: ${percent}%"></div>
+                    </div>
+                    <p>${numberFormat.format(progress)} / ${challenge.target} ${challenge.unit}</p>
+                    <div class="challenge-footer">
+                        <span class="challenge-reward">${completed ? 'Reward claimed' : `Reward: ${challenge.reward} crystals`}</span>
+                        <button class="challenge-button ${!disabled ? 'ready' : ''}" type="button" ${disabled ? 'disabled' : ''}>${completed ? 'Complete' : active ? 'Running' : gamePaused ? 'Paused' : activeChallengeId ? 'Wait' : 'Start'}</button>
+                    </div>
+                `;
+                card.querySelector('.challenge-button').addEventListener('click', () => startChallenge(challenge.id));
+                list.append(card);
+            }
+        }
+
+        function startChallenge(challengeId) {
+            const challenge = challenges.find(item => item.id === challengeId);
+            if (gamePaused || activeChallengeId || !challenge || completedChallenges.has(challengeId)) return;
+            activeChallengeId = challengeId;
+            challengeProgress = 0;
+            challengeSecondsRemaining = challenge.duration;
+            showToast(`Challenge started: ${challenge.name}`);
+            render();
+        }
+
+        function recordChallengeProgress(type, amount) {
+            const challenge = challenges.find(item => item.id === activeChallengeId);
+            if (!challenge || challenge.type !== type || amount <= 0) return;
+            challengeProgress = Math.min(challenge.target, challengeProgress + amount);
+            if (challengeProgress >= challenge.target) {
+                completedChallenges.add(challenge.id);
+                activeChallengeId = null;
+                challengeSecondsRemaining = 0;
+                crystals += challenge.reward;
+                showToast(`Challenge complete: +${challenge.reward} crystals`);
+                playSound(880);
+            }
+        }
+
+        function tickChallenge() {
+            if (!activeChallengeId) return;
+            challengeSecondsRemaining--;
+            if (challengeSecondsRemaining <= 0) {
+                const challenge = challenges.find(item => item.id === activeChallengeId);
+                activeChallengeId = null;
+                challengeProgress = 0;
+                challengeSecondsRemaining = 0;
+                showToast(`Challenge failed: ${challenge.name}`);
+            }
+        }
+
         function render() {
             scoreEl.textContent = numberFormat.format(Math.floor(score));
             clickStat.textContent = numberFormat.format(getClickPower());
@@ -1085,6 +1182,7 @@
             renderCrafting();
             renderFactory();
             renderSectors();
+            renderChallenges();
             renderMission();
             renderAchievements();
         }
@@ -1111,6 +1209,7 @@
                     unlockedSectors: [...unlockedSectors],
                     unlockedResearches: [...unlockedResearches],
                     unlockedAchievements: [...unlockedAchievements],
+                    completedChallenges: [...completedChallenges],
                     soundEnabled,
                     motionEnabled,
                     breakRemindersEnabled,
@@ -1173,6 +1272,10 @@
                 const knownAchievementIds = new Set(achievements.map(achievement => achievement.id));
                 unlockedAchievements = new Set(saved.unlockedAchievements.filter(value => knownAchievementIds.has(value)));
             }
+            if (Array.isArray(saved.completedChallenges)) {
+                const knownChallengeIds = new Set(challenges.map(challenge => challenge.id));
+                completedChallenges = new Set(saved.completedChallenges.filter(value => knownChallengeIds.has(value)));
+            }
             if (typeof saved.soundEnabled === 'boolean') soundEnabled = saved.soundEnabled;
             if (typeof saved.motionEnabled === 'boolean') motionEnabled = saved.motionEnabled;
             if (typeof saved.breakRemindersEnabled === 'boolean') breakRemindersEnabled = saved.breakRemindersEnabled;
@@ -1202,6 +1305,7 @@
             score -= cost;
             upgrade.owned += actualQuantity;
             totalUpgrades += actualQuantity;
+            recordChallengeProgress('upgrades', actualQuantity);
             recordProgress('upgrades', actualQuantity);
             checkAchievements();
             playSound(640);
@@ -1289,6 +1393,7 @@
         function addEnergy(amount) {
             score += amount;
             totalEnergyEarned += amount;
+            recordChallengeProgress('energy', amount);
             recordProgress('energy', amount);
             checkAchievements();
         }
@@ -1297,6 +1402,7 @@
             if (gamePaused) return;
             totalClicks++;
             recentClickTimes.push(performance.now());
+            recordChallengeProgress('clicks', 1);
             addEnergy(getClickPower());
             recordProgress('clicks', 1);
             playSound();
@@ -1358,6 +1464,7 @@
             const rate = getProductionRate();
             if (rate > 0) addEnergy(rate);
             crystals += getCrystalProductionRate();
+            tickChallenge();
             if (breakRemindersEnabled && document.visibilityState === 'visible' && breakSeconds < breakTargetSeconds) {
                 breakSeconds++;
             }

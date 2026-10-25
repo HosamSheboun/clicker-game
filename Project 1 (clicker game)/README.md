@@ -2,7 +2,7 @@
 
 ## Project overview
 
-Energy Clicker is a browser-based incremental game. Players generate energy by clicking, spend it on upgrades, complete missions, earn achievements, and reset through prestige for permanent bonuses. Progress is saved in the browser.
+Energy Clicker is a browser based incremental game. Players generate energy by clicking, spend it on upgrades, complete missions, earn achievements, and reset through prestige for permanent bonuses. Progress is saved in the browser.
 
 This document tracks the planned major updates and records what has been completed.
 
@@ -10,16 +10,16 @@ This document tracks the planned major updates and records what has been complet
 
 | # | Major update | Scope | Status |
 |---|---|---|---|
-| 1 | Lab Management | Bulk-buy upgrades and track lifetime statistics. | **Done** |
+| 1 | Lab Management | Bulk buy upgrades and track lifetime statistics. | **Done** |
 | 2 | Research Tree | Add unlockable research branches with choices that shape a play style. | **Done** |
 | 3 | Resource Crafting | Introduce another resource and recipes for specialized upgrades. | **Done** |
 | 4 | Factory Builder | Let players arrange production modules and connect automation chains. | **Done** |
 | 5 | Exploration Map | Unlock locations with distinct production bonuses and visual themes. | **Done** |
-| 6 | Challenge Runs | Add optional scenarios with unique rules and rewards. | Planned |
+| 6 | Challenge Runs | Add optional scenarios with unique rules and rewards. | **Done** |
 | 7 | Artifact Collection | Add passive artifacts that players can collect and equip. | Planned |
-| 8 | Story Campaign | Build a progression-based sequence of chapters, characters, and goals. | Planned |
+| 8 | Story Campaign | Build a progression based sequence of chapters, characters, and goals. | Planned |
 | 9 | Accessibility & Localization | Expand language support and input, display, and assistive options. | Planned |
-| 10 | Portable Saves | Support save-file export and import; consider cloud sync if a backend is added. | Planned |
+| 10 | Portable Saves | Support save file export and import; consider cloud sync if a backend is added. | Planned |
 
 The roadmap is a guide, not a fixed release schedule. Scope and order may change as the game evolves.
 
@@ -34,14 +34,14 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Showed the total bundle price, recalculated sequential Efficient Circuits discounts, and handled its level cap during bulk purchases.
 - Added lifetime counters for energy generated, clicks, upgrades purchased, and prestige cores.
 - Saved the selected purchase quantity with existing browser save data.
-- Verified bulk purchase pricing, stats and selection persistence after reload, discount progression and level-cap behavior, and a narrow mobile viewport.
+- Verified bulk purchase pricing, stats and selection persistence after reload, discount progression and level cap behavior, and a narrow mobile viewport.
 
 ### Update 2 — Research Tree
 
 **Status:** Complete  
 **Date:** 2026-10-24
 
-- Added a permanent research tree with branch-based upgrades and prerequisite locks.
+- Added a permanent research tree with branch based upgrades and prerequisite locks.
 - Earned research points from lifetime energy generation; points persist in browser saves.
 - Applied research bonuses to click output, passive generation, upgrade costs, and prestige scaling.
 - Added a dedicated research panel with unlock states, branch labels, and point tracking.
@@ -53,14 +53,14 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 
 - Added crystal refinement and three craftable specialty upgrades.
 - Resource crafting grants permanent bonuses to click power, passive generation, and upgrade costs.
-- Saved crystal totals and crafted-upgrade levels with the browser save data.
+- Saved crystal totals and crafted upgrade levels with the browser save data.
 
 ### Update 4 — Factory Builder
 
 **Status:** Complete  
 **Date:** 2026-10-25
 
-- Added a factory module system for drilling, smelting, and assembly-line scaling.
+- Added a factory module system for drilling, smelting, and assembly line scaling.
 - Built module costs and purchase logic into the economy, with persistent counts in save data.
 - Integrated module perks into passive production and global output efficiency.
 
@@ -73,16 +73,27 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Region payouts boost overall production, click power, and prestige scaling.
 - Saved each unlocked sector with the game progress.
 
+### Update 6 — Challenge Runs
+
+**Status:** Complete  
+**Date:** 2026-10-25
+
+- Added three timed challenges for clicking, energy generation, and upgrade purchases.
+- Awarded one-time crystal rewards for completing each challenge.
+- Made challenge timers pause with the game; failed attempts can be retried.
+- Persisted completed challenge rewards while keeping active attempts out of saves.
+
 ## Current game features
 
-- Click-to-generate energy and passive production.
-- Five upgrade types, including click-power and cost-reduction upgrades.
+- Click to generate energy and passive production.
+- Five upgrade types, including click power and cost reduction upgrades.
 - Research tree with permanent branch upgrades and prerequisite locks.
 - Resource crafting with crystals and specialized upgrades.
-- Factory-building modules and exploration sectors for large-scale progression.
+- Factory building modules and exploration sectors for large scale progression.
+- Timed challenge runs with one time crystal rewards.
 - Missions, achievements, and prestige.
 - Automatic local saves and capped offline production.
-- Optional sound, motion, and break-reminder settings, plus pause/resume.
+- Optional sound, motion, and break reminder settings, plus pause/resume.
 - Bulk upgrade purchases, lifetime statistics, research progression, crafting, factory modules, and exploration.
 
 ## Development notes
