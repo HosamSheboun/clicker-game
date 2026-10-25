@@ -978,10 +978,13 @@
                 missionProgress += added;
                 remaining -= added;
                 if (missionProgress >= mission.target) {
-                    score += mission.reward;
+                    const reward = mission.reward;
+                    score += reward;
+                    totalEnergyEarned += reward;
                     missionIndex++;
                     missionProgress = 0;
-                    showToast(`Mission complete! +${numberFormat.format(mission.reward)} energy`);
+                    checkAchievements();
+                    showToast(`Mission complete! +${numberFormat.format(reward)} energy`);
                     playSound(780);
                 }
             }

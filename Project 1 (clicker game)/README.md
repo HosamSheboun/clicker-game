@@ -94,6 +94,37 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Organized progression panels into Overview, Build, and Records views with accessible section controls.
 - Verified artifact purchasing, slot limits, equipping, bonus calculations, and pause behavior.
 
+## Latest devlog — The Lab Overhaul
+
+This update was the big combined push: instead of spreading improvements across multiple tiny waves, everything landed together in one stronger release. The game now feels more complete, more addictive, and far easier to understand at a glance.
+
+We rebuilt the progression loop around a cleaner structure: the player still clicks to generate energy, but now that energy fuels a broader lab system that includes upgrades, research, crafting, modules, sectors, missions, achievements, challenge runs, and prestige. The core loop is faster to understand, while the deeper systems reward long-term planning.
+
+### What changed
+
+- Added a stronger clicker foundation with manual energy gains, passive production, and a click-speed readout in the main HUD.
+- Expanded the upgrade system with buy quantity controls, cost scaling, and better bulk purchase feedback.
+- Added a research tree with permanent branch upgrades and requirement locks, so progression feels deliberate instead of repetitive.
+- Introduced crystal crafting and specialty upgrades that improve click power, passive generation, and economy efficiency.
+- Added factory modules for scaling automation and deeper production chains.
+- Added exploration sectors with permanent region bonuses and bigger strategic payoff.
+- Introduced timed challenge runs with crystal rewards and pause-safe gameplay.
+- Added collectible artifacts with permanent bonuses and a two-slot equipment limit.
+- Organized the interface into Overview, Build, and Records views to make the game feel cleaner and more readable.
+- Added missions, prestige, lifetime statistics, and unlockable achievements to extend the progression arc.
+- Improved save reliability and offline production logic so larger runs remain stable.
+- Added optional sound, motion, and break reminder controls for a more polished experience.
+
+### Why this feels better
+
+The main goal was to make the game feel more alive without making it confusing. The old version was functional, but it felt like pieces spread across separate systems. This version unifies those pieces into one lab identity: you are building a power engine, not just clicking a number.
+
+The progression is now smoother because each system feeds into the next. Upgrades strengthen output, research refines the economy, crafting adds specialization, factory modules scale automation, sectors expand scale, and prestige resets the board for long-term growth. The UI is clearer, the loop is stronger, and the game reads as an actual incremental game rather than a loose prototype.
+
+### Final state
+
+The project now sits in a strong middle ground between simple arcade gameplay and deeper strategy progression. It is still lightweight and browser-first, but it has enough systems to feel rewarding and replayable. The next logical steps are story content, accessibility support, and portable save/import tools, but the current build is a major, polished release in its own right.
+
 ## Current game features
 
 - Click to generate energy and passive production.
