@@ -153,7 +153,7 @@
         .stats {
             display: grid;
             width: 100%;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
             margin-top: 34px;
         }
@@ -310,6 +310,15 @@
         .crafting-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.72rem; font-weight: 800; }
         .crafting-button:disabled { opacity: 0.5; cursor: not-allowed; }
         .crafting-button.ready:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
+        .factory-grid, .sector-grid { display: grid; gap: 12px; margin-top: 14px; }
+        .module-card, .sector-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(7, 12, 25, 0.35); }
+        .module-card h3, .sector-card h3 { margin: 0; font-size: 0.88rem; }
+        .module-card p, .sector-card p { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.5; }
+        .module-footer, .sector-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        .module-cost, .sector-cost { color: #ffd178; font-size: 0.76rem; font-weight: 800; }
+        .module-button, .sector-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.72rem; font-weight: 800; }
+        .module-button:disabled, .sector-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .module-button.ready:not(:disabled), .sector-button.ready:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
         .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
         .lifetime-stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7, 12, 25, 0.35); }
         .lifetime-stat span { display: block; color: var(--muted); font-size: 0.7rem; }
@@ -435,6 +444,10 @@
                         <span class="stat-label">Per second</span>
                         <span class="stat-value" id="rate-stat">0</span>
                     </div>
+                    <div class="stat">
+                        <span class="stat-label">Click speed</span>
+                        <span class="stat-value" id="cps-stat">0 CPS</span>
+                    </div>
                 </div>
             </section>
 
@@ -528,6 +541,18 @@
                 <div class="crafting-list" id="crafting-list"></div>
             </article>
 
+            <article class="extra-card" aria-labelledby="factory-title">
+                <h2 id="factory-title">Factory builder</h2>
+                <p>Lay down automated modules to scale production across your lab complex.</p>
+                <div class="factory-grid" id="factory-grid"></div>
+            </article>
+
+            <article class="extra-card" aria-labelledby="exploration-title">
+                <h2 id="exploration-title">Exploration map</h2>
+                <p>Unlock new sectors to gain permanent bonuses and expand your empire.</p>
+                <div class="sector-grid" id="sector-grid"></div>
+            </article>
+
             <article class="extra-card" aria-labelledby="settings-title">
                 <h2 id="settings-title">Play settings</h2>
                 <p>Sound and motion are optional. Break reminders are off unless you turn them on.</p>
@@ -592,6 +617,16 @@
             { id: 'thermal-lattice', name: 'Thermal Lattice', costEnergy: 600, costCrystals: 3, description: '+18% passive production per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.productionMultiplier *= 1 + count * 0.18; } },
             { id: 'quantum-weave', name: 'Quantum Weave', costEnergy: 900, costCrystals: 5, description: '-10% upgrade costs per craft.', yield: 0, action: 'craft', apply: (state, count) => { state.costMultiplier *= 1 - count * 0.1; } }
         ];
+        const factoryModules = [
+            { id: 'drill', name: 'Energy drill', cost: 1500, output: 12, description: '+12 energy/sec per module.' },
+            { id: 'smelter', name: 'Crystal smelter', cost: 3500, output: 0.25, description: '+0.25 crystals/sec per module.' },
+            { id: 'assembler', name: 'Assembly line', cost: 7000, output: 0.14, description: '+14% all output per module.' }
+        ];
+        const explorationSectors = [
+            { id: 'basalt-dunes', name: 'Basalt dunes', cost: 10000, description: '+20% all production.', bonus: { productionMultiplier: 1.2 } },
+            { id: 'ice-vents', name: 'Ice vents', cost: 25000, description: '+25% click power.', bonus: { clickMultiplier: 1.25 } },
+            { id: 'lunar-spine', name: 'Lunar spine', cost: 50000, description: '+30% prestige bonus.', bonus: { prestigeMultiplier: 1.3 } }
+        ];
         const achievements = [
             { id: 'first-click', name: 'First spark', detail: 'Generate your first energy.', test: stats => stats.clicks >= 1 },
             { id: 'hundred-clicks', name: 'Getting warmed up', detail: 'Make 100 clicks.', test: stats => stats.clicks >= 100 },
@@ -605,6 +640,7 @@
         let score = 0;
         let totalEnergyEarned = 0;
         let totalClicks = 0;
+        let recentClickTimes = [];
         let totalUpgrades = 0;
         let prestigeCount = 0;
         let missionIndex = 0;
@@ -612,6 +648,8 @@
         let researchSpentPoints = 0;
         let crystals = 0;
         let craftedLevels = { 'arc-repeater': 0, 'thermal-lattice': 0, 'quantum-weave': 0 };
+        let factoryCounts = { drill: 0, smelter: 0, assembler: 0 };
+        let unlockedSectors = new Set();
         let unlockedResearches = new Set();
         let unlockedAchievements = new Set();
         let soundEnabled = false;
@@ -628,6 +666,7 @@
         const saveStatus = document.getElementById('save-status');
         const clickStat = document.getElementById('click-stat');
         const rateStat = document.getElementById('rate-stat');
+        const cpsStat = document.getElementById('cps-stat');
         const soundToggle = document.getElementById('sound-toggle');
         const motionToggle = document.getElementById('motion-toggle');
         const pauseToggle = document.getElementById('pause-toggle');
@@ -706,8 +745,44 @@
             return state;
         }
 
+        function getFactoryBonuses() {
+            const state = {
+                clickMultiplier: 1,
+                productionMultiplier: 1,
+                costMultiplier: 1,
+                automationMultiplier: 1,
+                prestigeMultiplier: 1
+            };
+            if (factoryCounts.drill > 0) state.productionMultiplier *= 1 + factoryCounts.drill * 0.12;
+            if (factoryCounts.smelter > 0) state.automationMultiplier *= 1 + factoryCounts.smelter * 0.1;
+            if (factoryCounts.assembler > 0) {
+                state.clickMultiplier *= 1 + factoryCounts.assembler * 0.14;
+                state.productionMultiplier *= 1 + factoryCounts.assembler * 0.14;
+                state.costMultiplier *= 1 - factoryCounts.assembler * 0.07;
+            }
+            return state;
+        }
+
+        function getExplorationBonuses() {
+            const state = {
+                clickMultiplier: 1,
+                productionMultiplier: 1,
+                costMultiplier: 1,
+                automationMultiplier: 1,
+                prestigeMultiplier: 1
+            };
+            for (const sector of explorationSectors) {
+                if (unlockedSectors.has(sector.id) && sector.bonus) {
+                    Object.entries(sector.bonus).forEach(([key, value]) => {
+                        state[key] *= value;
+                    });
+                }
+            }
+            return state;
+        }
+
         function getPrestigeMultiplier() {
-            return (1 + prestigeCount * 0.05) * getResearchBonuses().prestigeMultiplier * getCraftingBonuses().prestigeMultiplier;
+            return (1 + prestigeCount * 0.05) * getResearchBonuses().prestigeMultiplier * getCraftingBonuses().prestigeMultiplier * getFactoryBonuses().prestigeMultiplier * getExplorationBonuses().prestigeMultiplier;
         }
 
         function getDiscountMultiplier() {
@@ -718,7 +793,9 @@
             const discountMultiplier = Math.max(0.5, 1 - Math.min(10, discountOwned) * 0.05);
             const researchCostMultiplier = getResearchBonuses().costMultiplier;
             const craftingCostMultiplier = getCraftingBonuses().costMultiplier;
-            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier * craftingCostMultiplier);
+            const factoryCostMultiplier = getFactoryBonuses().costMultiplier;
+            const explorationCostMultiplier = getExplorationBonuses().costMultiplier;
+            return Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier * craftingCostMultiplier * factoryCostMultiplier * explorationCostMultiplier);
         }
 
         function getBundleCost(upgrade, quantity) {
@@ -734,14 +811,19 @@
         function getClickPower() {
             const researchBonuses = getResearchBonuses();
             const craftingBonuses = getCraftingBonuses();
-            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier() * researchBonuses.clickMultiplier * craftingBonuses.clickMultiplier;
+            const factoryBonuses = getFactoryBonuses();
+            const explorationBonuses = getExplorationBonuses();
+            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier() * researchBonuses.clickMultiplier * craftingBonuses.clickMultiplier * factoryBonuses.clickMultiplier * explorationBonuses.clickMultiplier;
         }
 
         function getProductionRate() {
             const researchBonuses = getResearchBonuses();
             const craftingBonuses = getCraftingBonuses();
-            const baseRate = (upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate) * researchBonuses.automationMultiplier * craftingBonuses.automationMultiplier;
-            return baseRate * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier;
+            const factoryBonuses = getFactoryBonuses();
+            const explorationBonuses = getExplorationBonuses();
+            const baseRate = (upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate) * researchBonuses.automationMultiplier * craftingBonuses.automationMultiplier * factoryBonuses.automationMultiplier * explorationBonuses.automationMultiplier;
+            const moduleBoost = factoryCounts.drill * 12 + factoryCounts.assembler * 10;
+            return (baseRate + moduleBoost) * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier * factoryBonuses.productionMultiplier * explorationBonuses.productionMultiplier;
         }
 
         function playSound(frequency = 520) {
@@ -885,6 +967,50 @@
             }
         }
 
+        function renderFactory() {
+            const grid = document.getElementById('factory-grid');
+            grid.replaceChildren();
+            for (const module of factoryModules) {
+                const count = factoryCounts[module.id] || 0;
+                const cost = module.cost * (count + 1) * 1.35;
+                const canAfford = score >= cost;
+                const card = document.createElement('div');
+                card.className = 'odule-card';
+                card.innerHTML = `
+                    <h3>${module.name}</h3>
+                    <p>${module.description}</p>
+                    <div class="module-footer">
+                        <span class="module-cost">${numberFormat.format(cost)} ⚡ · ${count} owned</span>
+                        <button class="module-button ${canAfford ? 'ready' : ''}" type="button" ${canAfford ? '' : 'disabled'}>Build</button>
+                    </div>
+                `;
+                card.querySelector('.module-button').addEventListener('click', () => buyFactoryModule(module.id));
+                grid.append(card);
+            }
+        }
+
+        function renderSectors() {
+            const grid = document.getElementById('sector-grid');
+            grid.replaceChildren();
+            for (const sector of explorationSectors) {
+                const unlocked = unlockedSectors.has(sector.id);
+                const cost = sector.cost;
+                const canAfford = score >= cost;
+                const card = document.createElement('div');
+                card.className = 'sector-card';
+                card.innerHTML = `
+                    <h3>${sector.name}</h3>
+                    <p>${sector.description}</p>
+                    <div class="sector-footer">
+                        <span class="sector-cost">${unlocked ? 'Unlocked' : `${numberFormat.format(cost)} ⚡`}</span>
+                        <button class="sector-button ${canAfford && !unlocked ? 'ready' : ''}" type="button" ${unlocked || !canAfford ? 'disabled' : ''}>${unlocked ? 'Live' : 'Unlock'}</button>
+                    </div>
+                `;
+                card.querySelector('.sector-button').addEventListener('click', () => unlockSector(sector.id));
+                grid.append(card);
+            }
+        }
+
         function renderMission() {
             const mission = getMission();
             const percent = Math.min(100, missionProgress / mission.target * 100);
@@ -901,6 +1027,9 @@
             scoreEl.textContent = numberFormat.format(Math.floor(score));
             clickStat.textContent = numberFormat.format(getClickPower());
             rateStat.textContent = `${numberFormat.format(getProductionRate())} / sec`;
+            const now = performance.now();
+            recentClickTimes = recentClickTimes.filter(timestamp => now - timestamp < 1000);
+            cpsStat.textContent = `${recentClickTimes.length} CPS`;
             document.getElementById('click-value').textContent = `+${numberFormat.format(getClickPower())} energy`;
 
             for (const [key, elements] of Object.entries(upgradeElements)) {
@@ -945,6 +1074,8 @@
             document.body.classList.toggle('motion-off', !motionEnabled);
             renderResearches();
             renderCrafting();
+            renderFactory();
+            renderSectors();
             renderMission();
             renderAchievements();
         }
@@ -967,6 +1098,8 @@
                     researchSpentPoints,
                     crystals,
                     craftedLevels,
+                    factoryCounts,
+                    unlockedSectors: [...unlockedSectors],
                     unlockedResearches: [...unlockedResearches],
                     unlockedAchievements: [...unlockedAchievements],
                     soundEnabled,
@@ -1014,6 +1147,15 @@
                     const value = Number(saved.craftedLevels[recipe.id]);
                     if (Number.isFinite(value) && value >= 0) craftedLevels[recipe.id] = value;
                 }
+            }
+            if (saved.factoryCounts && typeof saved.factoryCounts === 'object') {
+                for (const key of Object.keys(factoryCounts)) {
+                    const value = Number(saved.factoryCounts[key]);
+                    if (Number.isFinite(value) && value >= 0) factoryCounts[key] = value;
+                }
+            }
+            if (Array.isArray(saved.unlockedSectors)) {
+                unlockedSectors = new Set(saved.unlockedSectors.filter(value => explorationSectors.some(sector => sector.id === value)));
             }
             if (Array.isArray(saved.unlockedResearches)) {
                 unlockedResearches = new Set(saved.unlockedResearches.filter(value => researchTree.some(research => research.id === value)));
@@ -1094,6 +1236,32 @@
             saveGame();
         }
 
+        function buyFactoryModule(moduleId) {
+            const module = factoryModules.find(item => item.id === moduleId);
+            if (!module) return;
+            const count = factoryCounts[moduleId] || 0;
+            const cost = module.cost * (count + 1) * 1.35;
+            if (score < cost) return;
+            score -= cost;
+            factoryCounts[moduleId] = count + 1;
+            showToast(`${module.name} installed`);
+            playSound(620);
+            render();
+            saveGame();
+        }
+
+        function unlockSector(sectorId) {
+            const sector = explorationSectors.find(item => item.id === sectorId);
+            if (!sector || unlockedSectors.has(sectorId)) return;
+            if (score < sector.cost) return;
+            score -= sector.cost;
+            unlockedSectors.add(sectorId);
+            showToast(`${sector.name} discovered`);
+            playSound(860);
+            render();
+            saveGame();
+        }
+
         function prestige() {
             if (gamePaused || totalEnergyEarned < getPrestigeThreshold()) return;
             if (!window.confirm(`Trade your current energy and upgrades for a permanent +5% production core? You have generated ${numberFormat.format(totalEnergyEarned)} energy in total.`)) return;
@@ -1117,6 +1285,7 @@
         clickerBtn.addEventListener('click', () => {
             if (gamePaused) return;
             totalClicks++;
+            recentClickTimes.push(performance.now());
             addEnergy(getClickPower());
             recordProgress('clicks', 1);
             playSound();
@@ -1177,6 +1346,9 @@
             if (gamePaused) return;
             const rate = getProductionRate();
             if (rate > 0) addEnergy(rate);
+            if (factoryCounts.smelter > 0) {
+                crystals += factoryCounts.smelter * 0.25;
+            }
             if (breakRemindersEnabled && document.visibilityState === 'visible' && breakSeconds < breakTargetSeconds) {
                 breakSeconds++;
             }

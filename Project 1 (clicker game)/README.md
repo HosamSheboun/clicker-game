@@ -13,8 +13,8 @@ This document tracks the planned major updates and records what has been complet
 | 1 | Lab Management | Bulk-buy upgrades and track lifetime statistics. | **Done** |
 | 2 | Research Tree | Add unlockable research branches with choices that shape a play style. | **Done** |
 | 3 | Resource Crafting | Introduce another resource and recipes for specialized upgrades. | **Done** |
-| 4 | Factory Builder | Let players arrange production modules and connect automation chains. | Planned |
-| 5 | Exploration Map | Unlock locations with distinct production bonuses and visual themes. | Planned |
+| 4 | Factory Builder | Let players arrange production modules and connect automation chains. | **Done** |
+| 5 | Exploration Map | Unlock locations with distinct production bonuses and visual themes. | **Done** |
 | 6 | Challenge Runs | Add optional scenarios with unique rules and rewards. | Planned |
 | 7 | Artifact Collection | Add passive artifacts that players can collect and equip. | Planned |
 | 8 | Story Campaign | Build a progression-based sequence of chapters, characters, and goals. | Planned |
@@ -55,16 +55,35 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Resource crafting grants permanent bonuses to click power, passive generation, and upgrade costs.
 - Saved crystal totals and crafted-upgrade levels with the browser save data.
 
+### Update 4 — Factory Builder
+
+**Status:** Complete  
+**Date:** 2026-10-25
+
+- Added a factory module system for drilling, smelting, and assembly-line scaling.
+- Built module costs and purchase logic into the economy, with persistent counts in save data.
+- Integrated module perks into passive production and global output efficiency.
+
+### Update 5 — Exploration Map
+
+**Status:** Complete  
+**Date:** 2026-10-25
+
+- Added an exploration map with unlockable sectors and permanent region bonuses.
+- Region payouts boost overall production, click power, and prestige scaling.
+- Saved each unlocked sector with the game progress.
+
 ## Current game features
 
 - Click-to-generate energy and passive production.
 - Five upgrade types, including click-power and cost-reduction upgrades.
 - Research tree with permanent branch upgrades and prerequisite locks.
 - Resource crafting with crystals and specialized upgrades.
+- Factory-building modules and exploration sectors for large-scale progression.
 - Missions, achievements, and prestige.
 - Automatic local saves and capped offline production.
 - Optional sound, motion, and break-reminder settings, plus pause/resume.
-- Bulk upgrade purchases, lifetime statistics, research progression, and crafting.
+- Bulk upgrade purchases, lifetime statistics, research progression, crafting, factory modules, and exploration.
 
 ## Development notes
 
