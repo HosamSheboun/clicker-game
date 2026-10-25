@@ -16,7 +16,7 @@ This document tracks the planned major updates and records what has been complet
 | 4 | Factory Builder | Let players arrange production modules and connect automation chains. | **Done** |
 | 5 | Exploration Map | Unlock locations with distinct production bonuses and visual themes. | **Done** |
 | 6 | Challenge Runs | Add optional scenarios with unique rules and rewards. | **Done** |
-| 7 | Artifact Collection | Add passive artifacts that players can collect and equip. | Planned |
+| 7 | Artifact Collection | Add passive artifacts that players can collect and equip. | **Done** |
 | 8 | Story Campaign | Build a progression based sequence of chapters, characters, and goals. | Planned |
 | 9 | Accessibility & Localization | Expand language support and input, display, and assistive options. | Planned |
 | 10 | Portable Saves | Support save file export and import; consider cloud sync if a backend is added. | Planned |
@@ -83,6 +83,17 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Made challenge timers pause with the game; failed attempts can be retried.
 - Persisted completed challenge rewards while keeping active attempts out of saves.
 
+### Update 7 — Artifact Collection and Progress Views
+
+**Status:** Complete  
+**Date:** 2026-10-25
+
+- Added four collectible artifacts with permanent bonuses to clicking, energy production, crystal production, or upgrade costs.
+- Added crystal purchases, equip and unequip controls, and a two-artifact equipment limit.
+- Saved collected and equipped artifacts, validating saved IDs and enforcing the equipment limit during load.
+- Organized progression panels into Overview, Build, and Records views with accessible section controls.
+- Verified artifact purchasing, slot limits, equipping, bonus calculations, and pause behavior.
+
 ## Current game features
 
 - Click to generate energy and passive production.
@@ -91,6 +102,8 @@ The roadmap is a guide, not a fixed release schedule. Scope and order may change
 - Resource crafting with crystals and specialized upgrades.
 - Factory building modules and exploration sectors for large scale progression.
 - Timed challenge runs with one time crystal rewards.
+- Collectible artifacts with two equipment slots and permanent bonuses.
+- Organized progression panels with Overview, Build, and Records views.
 - Missions, achievements, and prestige.
 - Automatic local saves and capped offline production.
 - Optional sound, motion, and break reminder settings, plus pause/resume.

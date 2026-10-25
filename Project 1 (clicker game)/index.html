@@ -275,6 +275,33 @@
             gap: 16px;
         }
 
+        .progress-nav {
+            display: flex;
+            grid-column: 1 / -1;
+            gap: 6px;
+            padding: 5px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(7, 12, 25, 0.55);
+        }
+
+        .progress-tab {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 0;
+            border-radius: 8px;
+            color: var(--muted);
+            background: transparent;
+            font-size: 0.8rem;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        .progress-tab[aria-pressed="true"] { color: #071a19; background: var(--accent); }
+        .progress-tab:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+        .extra-card[hidden] { display: none; }
+
         .extra-card {
             padding: 20px;
             border: 1px solid var(--line);
@@ -331,6 +358,17 @@
         .challenge-button:disabled { opacity: 0.5; cursor: not-allowed; }
         .challenge-button.ready:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
         .challenge-status { margin: 12px 0 0; color: var(--accent); font-size: 0.78rem; font-weight: 750; }
+        .artifact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+        .artifact-card { display: flex; min-width: 0; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7, 12, 25, 0.35); }
+        .artifact-card.equipped { border-color: rgba(115, 251, 211, 0.5); background: rgba(115, 251, 211, 0.06); }
+        .artifact-card h3 { margin: 0; font-size: 0.88rem; }
+        .artifact-card p { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.5; }
+        .artifact-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+        .artifact-cost { color: #ffd178; font-size: 0.74rem; font-weight: 800; }
+        .artifact-button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: #e8efff; background: rgba(20, 29, 53, 0.85); cursor: pointer; font-size: 0.7rem; font-weight: 800; }
+        .artifact-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .artifact-button.ready:not(:disabled) { border-color: rgba(115, 251, 211, 0.55); color: var(--accent); background: rgba(115, 251, 211, 0.08); }
+        .artifact-slots { margin: 12px 0 0 !important; color: var(--accent) !important; font-weight: 800; }
         .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
         .lifetime-stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7, 12, 25, 0.35); }
         .lifetime-stat span { display: block; color: var(--muted); font-size: 0.7rem; }
@@ -394,6 +432,7 @@
             .shop { padding: 0; }
             .extras { grid-template-columns: 1fr; }
             .achievement-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .artifact-grid { grid-template-columns: 1fr; }
             .extras { margin: 0 20px 20px; }
             .break-reminder { margin: 0 20px 20px; }
         }
@@ -505,7 +544,13 @@
         </div>
 
         <section class="extras" aria-label="Goals and progression">
-            <article class="extra-card" aria-labelledby="stats-title">
+            <nav class="progress-nav" aria-label="Progress sections">
+                <button class="progress-tab" type="button" data-progress-view="overview" aria-pressed="true">Overview</button>
+                <button class="progress-tab" type="button" data-progress-view="build" aria-pressed="false">Build</button>
+                <button class="progress-tab" type="button" data-progress-view="records" aria-pressed="false">Records</button>
+            </nav>
+
+            <article class="extra-card" data-view-card="overview" aria-labelledby="stats-title">
                 <h2 id="stats-title">Lab statistics</h2>
                 <p>Your all-time progress, including energy generated before prestige resets.</p>
                 <div class="stats-grid">
@@ -516,7 +561,7 @@
                 </div>
             </article>
 
-            <article class="extra-card" aria-labelledby="mission-title">
+            <article class="extra-card" data-view-card="overview" aria-labelledby="mission-title">
                 <h2 id="mission-title">Lab mission</h2>
                 <p id="mission-description">Earn energy to complete your next mission.</p>
                 <p class="mission-progress" id="mission-progress">0 / 100 energy</p>
@@ -526,14 +571,14 @@
                 <p id="mission-reward">Reward: 25 energy</p>
             </article>
 
-            <article class="extra-card" aria-labelledby="challenges-title">
+            <article class="extra-card" data-view-card="overview" aria-labelledby="challenges-title">
                 <h2 id="challenges-title">Challenge runs</h2>
                 <p>Complete a timed goal to earn a one-time crystal reward. Pause freezes an active run.</p>
                 <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">Choose a run to begin.</p>
                 <div class="challenge-list" id="challenge-list"></div>
             </article>
 
-            <article class="extra-card" aria-labelledby="prestige-title">
+            <article class="extra-card" data-view-card="overview" aria-labelledby="prestige-title">
                 <h2 id="prestige-title">Prestige</h2>
                 <p>Reset your energy and equipment to earn a permanent production bonus. Your achievements and lifetime stats stay.</p>
                 <div class="prestige-row">
@@ -542,7 +587,7 @@
                 </div>
             </article>
 
-            <article class="extra-card" aria-labelledby="research-title">
+            <article class="extra-card" data-view-card="build" aria-labelledby="research-title">
                 <h2 id="research-title">Research tree</h2>
                 <p>Spend research points to unlock permanent upgrades across your lab.</p>
                 <div class="research-points-row">
@@ -551,7 +596,7 @@
                 <div class="research-grid" id="research-grid"></div>
             </article>
 
-            <article class="extra-card" aria-labelledby="crafting-title">
+            <article class="extra-card" data-view-card="build" aria-labelledby="crafting-title">
                 <h2 id="crafting-title">Resource crafting</h2>
                 <p>Turn excess energy into rare crystals, then forge specialized upgrades for your lab.</p>
                 <div class="crafting-topline">
@@ -560,19 +605,26 @@
                 <div class="crafting-list" id="crafting-list"></div>
             </article>
 
-            <article class="extra-card" aria-labelledby="factory-title">
+            <article class="extra-card" data-view-card="build" aria-labelledby="factory-title">
                 <h2 id="factory-title">Factory builder</h2>
                 <p>Lay down automated modules to scale production across your lab complex.</p>
                 <div class="factory-grid" id="factory-grid"></div>
             </article>
 
-            <article class="extra-card" aria-labelledby="exploration-title">
+            <article class="extra-card" data-view-card="build" aria-labelledby="exploration-title">
                 <h2 id="exploration-title">Exploration map</h2>
                 <p>Unlock new sectors to gain permanent bonuses and expand your empire.</p>
                 <div class="sector-grid" id="sector-grid"></div>
             </article>
 
-            <article class="extra-card" aria-labelledby="settings-title">
+            <article class="extra-card" data-view-card="build" aria-labelledby="artifacts-title">
+                <h2 id="artifacts-title">Artifact collection</h2>
+                <p>Collect artifacts with crystals and equip up to two for permanent bonuses.</p>
+                <p class="artifact-slots" id="artifact-slots">Equipped: 0 / 2</p>
+                <div class="artifact-grid" id="artifact-grid"></div>
+            </article>
+
+            <article class="extra-card" data-view-card="records" aria-labelledby="settings-title">
                 <h2 id="settings-title">Play settings</h2>
                 <p>Sound and motion are optional. Break reminders are off unless you turn them on.</p>
                 <label class="break-setting">
@@ -581,7 +633,7 @@
                 </label>
             </article>
 
-            <article class="extra-card" aria-labelledby="achievements-title">
+            <article class="extra-card" data-view-card="records" aria-labelledby="achievements-title">
                 <h2 id="achievements-title">Achievements</h2>
                 <p id="achievement-count">0 of 8 unlocked</p>
                 <div class="achievement-grid" id="achievement-grid"></div>
@@ -661,6 +713,13 @@
             { id: 'energy-surge', name: 'Energy surge', description: 'Generate 500 energy in 30 seconds.', type: 'energy', target: 500, duration: 30, reward: 5, unit: 'energy' },
             { id: 'upgrade-rush', name: 'Upgrade rush', description: 'Buy 3 upgrade levels in 25 seconds.', type: 'upgrades', target: 3, duration: 25, reward: 4, unit: 'levels' }
         ];
+        const artifacts = [
+            { id: 'spark-lens', name: 'Spark Lens', cost: 3, description: '+15% click power.', bonus: { clickMultiplier: 1.15 } },
+            { id: 'helios-core', name: 'Helios Core', cost: 4, description: '+20% energy production.', bonus: { productionMultiplier: 1.2 } },
+            { id: 'crystal-bloom', name: 'Crystal Bloom', cost: 5, description: '+25% crystal production.', bonus: { crystalMultiplier: 1.25 } },
+            { id: 'gilded-gear', name: 'Gilded Gear', cost: 6, description: '-8% upgrade costs.', bonus: { costMultiplier: 0.92 } }
+        ];
+        const MAX_EQUIPPED_ARTIFACTS = 2;
         let score = 0;
         let totalEnergyEarned = 0;
         let totalClicks = 0;
@@ -677,6 +736,8 @@
         let unlockedResearches = new Set();
         let unlockedAchievements = new Set();
         let completedChallenges = new Set();
+        let ownedArtifacts = new Set();
+        let equippedArtifacts = new Set();
         let activeChallengeId = null;
         let challengeProgress = 0;
         let challengeSecondsRemaining = 0;
@@ -686,6 +747,7 @@
         let breakSeconds = 0;
         let breakTargetSeconds = BREAK_INTERVAL_SECONDS;
         let gamePaused = false;
+        let activeProgressView = 'overview';
         let audioContext;
         let toastTimeout;
 
@@ -808,6 +870,22 @@
             return state;
         }
 
+        function getArtifactBonuses() {
+            const state = {
+                clickMultiplier: 1,
+                productionMultiplier: 1,
+                costMultiplier: 1,
+                crystalMultiplier: 1
+            };
+            for (const artifact of artifacts) {
+                if (!equippedArtifacts.has(artifact.id)) continue;
+                for (const [key, value] of Object.entries(artifact.bonus)) {
+                    state[key] *= value;
+                }
+            }
+            return state;
+        }
+
         function getPrestigeMultiplier() {
             return (1 + prestigeCount * 0.05) * getResearchBonuses().prestigeMultiplier * getCraftingBonuses().prestigeMultiplier * getFactoryBonuses().prestigeMultiplier * getExplorationBonuses().prestigeMultiplier;
         }
@@ -822,7 +900,8 @@
             const craftingCostMultiplier = getCraftingBonuses().costMultiplier;
             const factoryCostMultiplier = getFactoryBonuses().costMultiplier;
             const explorationCostMultiplier = getExplorationBonuses().costMultiplier;
-            return Math.max(1, Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier * craftingCostMultiplier * factoryCostMultiplier * explorationCostMultiplier));
+            const artifactCostMultiplier = getArtifactBonuses().costMultiplier;
+            return Math.max(1, Math.floor(upgrade.baseCost * upgrade.growth ** owned * discountMultiplier * researchCostMultiplier * craftingCostMultiplier * factoryCostMultiplier * explorationCostMultiplier * artifactCostMultiplier));
         }
 
         function getBundleCost(upgrade, quantity) {
@@ -840,7 +919,8 @@
             const craftingBonuses = getCraftingBonuses();
             const factoryBonuses = getFactoryBonuses();
             const explorationBonuses = getExplorationBonuses();
-            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier() * researchBonuses.clickMultiplier * craftingBonuses.clickMultiplier * factoryBonuses.clickMultiplier * explorationBonuses.clickMultiplier;
+            const artifactBonuses = getArtifactBonuses();
+            return (1 + upgrades.power.owned) * (1 + upgrades.surge.owned * upgrades.surge.rate / 100) * getPrestigeMultiplier() * researchBonuses.clickMultiplier * craftingBonuses.clickMultiplier * factoryBonuses.clickMultiplier * explorationBonuses.clickMultiplier * artifactBonuses.clickMultiplier;
         }
 
         function getProductionRate() {
@@ -848,10 +928,11 @@
             const craftingBonuses = getCraftingBonuses();
             const factoryBonuses = getFactoryBonuses();
             const explorationBonuses = getExplorationBonuses();
+            const artifactBonuses = getArtifactBonuses();
             const baseRate = (upgrades.auto.owned + upgrades.reactor.owned * upgrades.reactor.rate) * researchBonuses.automationMultiplier * craftingBonuses.automationMultiplier * factoryBonuses.automationMultiplier * explorationBonuses.automationMultiplier;
             const drill = factoryModules.find(module => module.id === 'drill');
             const moduleBoost = factoryCounts.drill * drill.output;
-            return (baseRate + moduleBoost) * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier * factoryBonuses.productionMultiplier * explorationBonuses.productionMultiplier;
+            return (baseRate + moduleBoost) * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier * factoryBonuses.productionMultiplier * explorationBonuses.productionMultiplier * artifactBonuses.productionMultiplier;
         }
 
         function getCrystalProductionRate() {
@@ -860,7 +941,8 @@
             const craftingBonuses = getCraftingBonuses();
             const factoryBonuses = getFactoryBonuses();
             const explorationBonuses = getExplorationBonuses();
-            return factoryCounts.smelter * smelter.output * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier * factoryBonuses.productionMultiplier * explorationBonuses.productionMultiplier;
+            const artifactBonuses = getArtifactBonuses();
+            return factoryCounts.smelter * smelter.output * getPrestigeMultiplier() * researchBonuses.productionMultiplier * craftingBonuses.productionMultiplier * factoryBonuses.productionMultiplier * explorationBonuses.productionMultiplier * artifactBonuses.productionMultiplier * artifactBonuses.crystalMultiplier;
         }
 
         function playSound(frequency = 520) {
@@ -1048,6 +1130,68 @@
             }
         }
 
+        function renderArtifacts() {
+            const grid = document.getElementById('artifact-grid');
+            grid.replaceChildren();
+            document.getElementById('artifact-slots').textContent = `Equipped: ${equippedArtifacts.size} / ${MAX_EQUIPPED_ARTIFACTS} · ${numberFormat.format(crystals)} crystals`;
+
+            for (const artifact of artifacts) {
+                const owned = ownedArtifacts.has(artifact.id);
+                const equipped = equippedArtifacts.has(artifact.id);
+                const canEquip = equipped || equippedArtifacts.size < MAX_EQUIPPED_ARTIFACTS;
+                const disabled = gamePaused || (owned ? !canEquip : crystals < artifact.cost);
+                const card = document.createElement('article');
+                card.className = `artifact-card${equipped ? ' equipped' : ''}`;
+                card.innerHTML = `
+                    <h3>${artifact.name}</h3>
+                    <p>${artifact.description}</p>
+                    <div class="artifact-footer">
+                        <span class="artifact-cost">${owned ? equipped ? 'Equipped' : 'Collected' : `${artifact.cost} crystals`}</span>
+                        <button class="artifact-button ${!disabled && !equipped ? 'ready' : ''}" type="button" ${disabled ? 'disabled' : ''}>
+                            ${owned ? equipped ? 'Unequip' : 'Equip' : 'Collect'}
+                        </button>
+                    </div>
+                `;
+                card.querySelector('.artifact-button').addEventListener('click', () => collectOrToggleArtifact(artifact.id));
+                grid.append(card);
+            }
+        }
+
+        function collectOrToggleArtifact(artifactId) {
+            const artifact = artifacts.find(item => item.id === artifactId);
+            if (gamePaused || !artifact) return;
+
+            if (!ownedArtifacts.has(artifactId)) {
+                if (crystals < artifact.cost) return;
+                crystals -= artifact.cost;
+                ownedArtifacts.add(artifactId);
+                if (equippedArtifacts.size < MAX_EQUIPPED_ARTIFACTS) equippedArtifacts.add(artifactId);
+                showToast(`${artifact.name} collected`);
+            } else if (equippedArtifacts.has(artifactId)) {
+                equippedArtifacts.delete(artifactId);
+                showToast(`${artifact.name} unequipped`);
+            } else {
+                if (equippedArtifacts.size >= MAX_EQUIPPED_ARTIFACTS) return;
+                equippedArtifacts.add(artifactId);
+                showToast(`${artifact.name} equipped`);
+            }
+
+            render();
+            saveGame();
+        }
+
+        function setProgressView(view) {
+            const validViews = ['overview', 'build', 'records'];
+            if (!validViews.includes(view)) return;
+            activeProgressView = view;
+            document.querySelectorAll('[data-progress-view]').forEach(button => {
+                button.setAttribute('aria-pressed', String(button.dataset.progressView === view));
+            });
+            document.querySelectorAll('[data-view-card]').forEach(card => {
+                card.hidden = card.dataset.viewCard !== view;
+            });
+        }
+
         function renderMission() {
             const mission = getMission();
             const percent = Math.min(100, missionProgress / mission.target * 100);
@@ -1183,6 +1327,7 @@
             renderFactory();
             renderSectors();
             renderChallenges();
+            renderArtifacts();
             renderMission();
             renderAchievements();
         }
@@ -1210,6 +1355,8 @@
                     unlockedResearches: [...unlockedResearches],
                     unlockedAchievements: [...unlockedAchievements],
                     completedChallenges: [...completedChallenges],
+                    ownedArtifacts: [...ownedArtifacts],
+                    equippedArtifacts: [...equippedArtifacts],
                     soundEnabled,
                     motionEnabled,
                     breakRemindersEnabled,
@@ -1275,6 +1422,15 @@
             if (Array.isArray(saved.completedChallenges)) {
                 const knownChallengeIds = new Set(challenges.map(challenge => challenge.id));
                 completedChallenges = new Set(saved.completedChallenges.filter(value => knownChallengeIds.has(value)));
+            }
+            if (Array.isArray(saved.ownedArtifacts)) {
+                const knownArtifactIds = new Set(artifacts.map(artifact => artifact.id));
+                ownedArtifacts = new Set(saved.ownedArtifacts.filter(value => knownArtifactIds.has(value)));
+            }
+            if (Array.isArray(saved.equippedArtifacts)) {
+                equippedArtifacts = new Set(saved.equippedArtifacts
+                    .filter(value => ownedArtifacts.has(value) && artifacts.some(artifact => artifact.id === value))
+                    .slice(0, MAX_EQUIPPED_ARTIFACTS));
             }
             if (typeof saved.soundEnabled === 'boolean') soundEnabled = saved.soundEnabled;
             if (typeof saved.motionEnabled === 'boolean') motionEnabled = saved.motionEnabled;
@@ -1456,6 +1612,11 @@
             saveGame();
         });
 
+        document.querySelectorAll('[data-progress-view]').forEach(button => {
+            button.addEventListener('click', () => setProgressView(button.dataset.progressView));
+        });
+
+        setProgressView(activeProgressView);
         loadGame();
         render();
         saveGame();
