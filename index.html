@@ -209,6 +209,19 @@
 
         .upgrade-button:disabled { opacity: 0.56; cursor: not-allowed; }
 
+        .guide-list {
+            margin: 12px 0 0;
+            padding-left: 20px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            line-height: 1.7;
+        }
+
+        .guide-list strong {
+            color: #edf6ff;
+            font-weight: 800;
+        }
+
         .upgrade-icon {
             display: grid;
             width: 46px;
@@ -569,6 +582,11 @@
                     <div class="progress-bar" id="mission-bar"></div>
                 </div>
                 <p id="mission-reward">Reward: 25 energy</p>
+                <ul class="guide-list" aria-label="Beginner guidance">
+                    <li><strong>Start:</strong> click to make energy, then buy your first auto-clicker.</li>
+                    <li><strong>Grow:</strong> unlock research and crafting to improve your economy.</li>
+                    <li><strong>Scale:</strong> build modules and sectors once your output becomes steady.</li>
+                </ul>
             </article>
 
             <article class="extra-card" data-view-card="overview" aria-labelledby="challenges-title">
